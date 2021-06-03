@@ -11,7 +11,7 @@ the whole logic is build on pure Java 8.
 - Apache Druid (Available only on Linux, Max OS)
 
 ## Installation
-In the project directory run `npm installAll` to install all the
+In the project directory run `npm run installAll` to install all the
 necessary `node_modules`
 
 ## Available Scripts
