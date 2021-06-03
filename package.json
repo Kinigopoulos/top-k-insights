@@ -6,6 +6,9 @@
     "@testing-library/jest-dom": "^5.12.0",
     "@testing-library/react": "^11.2.7",
     "@testing-library/user-event": "^12.8.3",
+    "concurrently": "^6.2.0",
+    "druid-query": "^2.2.1",
+    "plywood": "^0.26.0",
     "react": "^17.0.2",
     "react-dom": "^17.0.2",
     "react-scripts": "4.0.3",
@@ -15,7 +18,9 @@
     "start": "react-scripts start",
     "build": "react-scripts build",
     "test": "react-scripts test",
-    "eject": "react-scripts eject"
+    "eject": "react-scripts eject",
+    "server": "npm start --prefix api",
+    "dev": "concurrently \"npm start\" \"npm run server\""
   },
   "eslintConfig": {
     "extends": [
@@ -34,5 +39,11 @@
       "last 1 firefox version",
       "last 1 safari version"
     ]
+  },
+  "proxy": "http://localhost:5000/",
+  "devDependencies": {
+    "axios": "^0.21.1",
+    "http-proxy-middleware": "^0.19.1",
+    "stream-to-array": "^2.3.0"
   }
 }

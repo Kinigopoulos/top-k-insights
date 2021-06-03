@@ -4,6 +4,10 @@
 /node_modules
 /.pnp
 .pnp.js
+.idea
+
+/api/TopKInsights/.idea
+/api/TopKInsights/out
 
 # testing
 /coverage
