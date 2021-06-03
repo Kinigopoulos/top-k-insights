@@ -7,8 +7,6 @@
     "@testing-library/react": "^11.2.7",
     "@testing-library/user-event": "^12.8.3",
     "concurrently": "^6.2.0",
-    "druid-query": "^2.2.1",
-    "plywood": "^0.26.0",
     "react": "^17.0.2",
     "react-dom": "^17.0.2",
     "react-scripts": "4.0.3",
@@ -17,10 +15,11 @@
   "scripts": {
     "start": "react-scripts start",
     "build": "react-scripts build",
-    "test": "react-scripts test",
-    "eject": "react-scripts eject",
+    "installBack": "cd api && npm install",
+    "installAll": "npm install && npm run installBack",
     "server": "npm start --prefix api",
-    "dev": "concurrently \"npm start\" \"npm run server\""
+    "dev": "concurrently \"npm start\" \"npm run start --prefix api\"",
+    "topk": "concurrently \"npm start\" \"npm run server --prefix api\""
   },
   "eslintConfig": {
     "extends": [

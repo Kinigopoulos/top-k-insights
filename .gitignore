@@ -6,6 +6,7 @@
 .pnp.js
 .idea
 
+/api/node_modules
 /api/TopKInsights/.idea
 /api/TopKInsights/out
 

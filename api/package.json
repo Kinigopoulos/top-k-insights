@@ -1,0 +1,21 @@
+{
+  "name": "top-k",
+  "version": "1.0.0",
+  "description": "Backend API provider for the TopK-Insights",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "server": "node index.js",
+    "start": "nodemon index.js"
+  },
+  "author": "Georgios Kynigopoulos",
+  "license": "ISC",
+  "dependencies": {
+    "axios": "^0.18.1",
+    "express": "^4.17.1",
+    "java": "^0.12.1"
+  },
+  "devDependencies": {
+    "nodemon": "^2.0.7"
+  }
+}

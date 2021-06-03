@@ -2,33 +2,10 @@ const express = require("express");
 const app = express();
 
 const axios = require('axios');
-const toArray = require("stream-to-array");
-
 let java = require("java");
 
 app.use(express.json());
 const port = 5000;
-
-const getData = async (datasource, columns) => {
-    const druidRequesterFactory = require('plywood-druid-requester').druidRequesterFactory;
-    const druidRequester = druidRequesterFactory({
-        host: 'localhost:8082'
-    });
-
-    return toArray(druidRequester({
-        query: {
-            query: `SELECT ${columns} FROM ${datasource} GROUPBY `
-        }
-    })).then(res => {
-        console.log(res);
-    })
-
-}
-//getData('sales', `Sales, Brand`)
-
-
-
-
 
 app.get('/data-sources', (req, res) => {
     axios.get('http://localhost:8081/druid/coordinator/v1/datasources?full')
