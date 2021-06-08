@@ -8,7 +8,8 @@
 
 /api/node_modules
 /api/TopKInsights/.idea
-/api/TopKInsights/out
+/api/TopKInsights/out/*
+!/api/TopKInsights/out/artifacts/
 
 # testing
 /coverage

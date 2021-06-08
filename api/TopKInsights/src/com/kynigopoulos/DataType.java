@@ -1,20 +1,15 @@
 package com.kynigopoulos;
 
-import java.util.Comparator;
 import java.util.Objects;
 
 public class DataType<T> implements Comparable<DataType<T>>{
 
-    private T value;
+    private final T value;
     private final boolean isOrdinal;
 
     public DataType(T value){
         this.value = value;
         isOrdinal = value instanceof Number;
-    }
-
-    public void setValue(T value){
-        this.value = value;
     }
 
     public T getValue(){

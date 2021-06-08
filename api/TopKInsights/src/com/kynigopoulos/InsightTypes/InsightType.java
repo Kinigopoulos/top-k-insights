@@ -6,4 +6,5 @@ import java.util.Map;
 
 public interface InsightType {
     double getSignificance(Map<DataType<?>, Double> F);
+    String getType();
 }

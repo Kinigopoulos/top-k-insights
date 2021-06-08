@@ -117,4 +117,57 @@ button:hover{
     margin: 1rem 1rem 1rem 0;
     width: 100%;
     border-radius: 3px;
+    overflow-y: scroll;
+}
+
+.insightRow{
+    display: flex;
+
+    justify-content: space-between;
+    background: var(--secondary-bg-color);
+    transition: 0.2s ease-in;
+    padding: 0 0.2rem;
+
+    border: 1px solid var(--secondary-color);
+    border-radius: 4px;
+}
+.insightRow:hover{
+    filter: brightness(1.2);
+}
+
+.insightCell{
+    width: 100%;
+    text-align: left;
+    padding: 0.4rem 0.2rem;
+}
+
+.graphContainer{
+    max-height: 0;
+    border: 1px solid var(--secondary-color);
+    border-radius: 4px;
+    padding: 0 0.2rem;
+    overflow: hidden;
+    transform-origin: top center;
+    animation: enterIn 0.2s ease-in forwards;
+}
+
+.graphContainer h4{
+    margin: 0.3rem 0;
+    padding: 0 0.1rem;
+}
+
+@keyframes enterIn {
+    to{
+        max-height: 75rem;
+    }
+}
+
+.chartContainer{
+    width: 50rem;
+    margin-bottom: 2rem;
+
+}
+
+.mainColor{
+    color: var(--main-color) !important;
 }

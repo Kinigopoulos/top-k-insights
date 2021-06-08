@@ -5,23 +5,37 @@ import org.apache.commons.math3.distribution.LogisticDistribution;
 import org.apache.commons.math3.stat.regression.SimpleRegression;
 
 import java.util.Map;
+import java.util.TreeMap;
 
 public class ShapeInsight implements InsightType {
 
     LogisticDistribution distribution;
     public ShapeInsight(){
-        distribution = new LogisticDistribution(5, 2);
+        distribution = new LogisticDistribution(0, 2);
     }
 
     @Override
     public double getSignificance(Map<DataType<?>, Double> F) {
-        SimpleRegression regression = new SimpleRegression();
-        for (Map.Entry<DataType<?>, Double> entry : F.entrySet()) {
-            regression.addData(((Number) entry.getKey().getValue()).doubleValue(), entry.getValue());
-        }
-        double slope = regression.getSlope();
-        double prob = distribution.cumulativeProbability(slope);
+        if(F instanceof TreeMap){
+            if(((TreeMap<DataType<?>, Double>) F).firstEntry() == ((TreeMap<DataType<?>, Double>) F).lastEntry()){
+                return .0;
+            }
 
-        return prob * regression.getRSquare();
+            SimpleRegression regression = new SimpleRegression();
+            for (Map.Entry<DataType<?>, Double> entry : F.entrySet()) {
+                regression.addData(((Number) entry.getKey().getValue()).doubleValue(), entry.getValue());
+            }
+            double slope = regression.getSlope();
+            double prob = distribution.cumulativeProbability(slope);
+
+            System.out.println("Shape p-val: " + (prob * regression.getRSquare()));
+            return prob * regression.getRSquare();
+        }
+        return -.01;
+    }
+
+    @Override
+    public String getType() {
+        return "Shape";
     }
 }

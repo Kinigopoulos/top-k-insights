@@ -1,22 +1,12 @@
 package com.kynigopoulos;
 
-import com.kynigopoulos.Aggregators.Aggregator;
 import com.kynigopoulos.Extractors.*;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 
 public class CompositeExtractor {
 
-    public static final Aggregator aggregator = new Aggregator();
-    public static int measureDimension;
     public static int t;
-    public static final Extractor[] extractors = new Extractor[]{
-            new AverageDifferenceExtractor(),
-            new PercentageExtractor(),
-            new PreviousDifferenceExtractor(),
-            new RankExtractor()
-    };
 
     ExtractorPair<?>[] pairs = new ExtractorPair[t];
 
@@ -45,7 +35,7 @@ public class CompositeExtractor {
 
         ArrayList<CompositeExtractor> newExtractors = new ArrayList<>();
         for(CompositeExtractor compositeExtractor : extractors){
-            for(Extractor extractor : CompositeExtractor.extractors){
+            for(Extractor extractor : Config.extractors){
                 if(level > 1 && !extractor.isMeaningful()){
                     continue;
                 }
@@ -63,16 +53,17 @@ public class CompositeExtractor {
     }
 
     public static ArrayList<CompositeExtractor> findCombinations(
-            ArrayList<DataType<?>> row,
-            int[] domainDimensions,
-            int measureDimension,
+            Database database,
             int t
     ) {
-        CompositeExtractor.measureDimension = measureDimension;
         CompositeExtractor.t = t;
 
+        ArrayList<DataType<?>> row = database.getRow(0);
+        int[] domainDimensions = database.getDomainDimensions();
+        int measureDimension = database.getMeasureIndex();
+
         ArrayList<CompositeExtractor> baseExtractor = new ArrayList<>();
-        baseExtractor.add(new CompositeExtractor(new ExtractorPair<>(measureDimension, aggregator)));
+        baseExtractor.add(new CompositeExtractor(new ExtractorPair<>(measureDimension, Config.aggregator)));
 
         return makeCompositeExtractor(baseExtractor, row,1, domainDimensions);
     }

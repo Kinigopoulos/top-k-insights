@@ -3,8 +3,6 @@ package com.kynigopoulos;
 import com.kynigopoulos.Aggregators.Aggregator;
 import com.kynigopoulos.Extractors.Extractor;
 import com.kynigopoulos.InsightTypes.InsightType;
-import com.kynigopoulos.InsightTypes.PointInsight;
-import com.kynigopoulos.InsightTypes.ShapeInsight;
 
 import java.util.*;
 
@@ -13,13 +11,9 @@ public class TopKInsights {
     private final Database database;
     private final int k;
     private final int t;
+    private double totalSum;
 
     private PriorityQueue<Insight> priorityQueue;
-
-    private static final InsightType[] insightTypes = new InsightType[]{
-            new PointInsight(),
-            new ShapeInsight()
-    };
 
     public TopKInsights(Database database, int k, int t){
         this.database = database;
@@ -36,26 +30,23 @@ public class TopKInsights {
     }
 
 
-    public ArrayList<Insight> getInsights(int[] domainDimensions, int measureDimension){
+    public ArrayList<Insight> getInsights(){
 
         if(database.size() == 0){
             return new ArrayList<>();
         }
 
+        int[] domainDimensions = database.getDomainDimensions();
+
         priorityQueue = new PriorityQueue<>(k);
-        //TODO peek to get value
-        //TODO poll to remove the smallest value
+        totalSum = database.getMeasureSum();
 
         //Enumerate all possible Extractors
         ArrayList<CompositeExtractor> compositeExtractors =
-                CompositeExtractor.findCombinations(database.getRow(0), domainDimensions, measureDimension, t);
+                CompositeExtractor.findCombinations(database, t);
 
         //Initialize subspace. Null value represents *.
-        ArrayList<DataType<?>> subspace = (ArrayList<DataType<?>>) database.getRow(0).clone();
-        subspace.remove(measureDimension);
-        for (int domainDimension : domainDimensions) {
-            subspace.set(domainDimension, null);
-        }
+        ArrayList<DataType<?>> subspace = database.getSubspace();
 
         //Starting procedure of enumerating insights
         for(CompositeExtractor compositeExtractor : compositeExtractors){
@@ -64,7 +55,7 @@ public class TopKInsights {
 
                 ArrayList<DataType<?>> values = database.getValues(domainDimension);
                 for(DataType<?> value : values){
-                    ArrayList<DataType<?>> newSubspace = (ArrayList<DataType<?>>) subspace.clone();
+                    ArrayList<DataType<?>> newSubspace = Database.getSubspaceCopy(subspace);
                     newSubspace.set(domainDimension, value);
 
                     for(int dividingDimension : domainDimensions){
@@ -93,22 +84,22 @@ public class TopKInsights {
         return true;
     }
 
-    public static String getSubspace(ArrayList<DataType<?>> subspace){
-        String sub = "< ";
+    public static String getSubspaceString(ArrayList<DataType<?>> subspace){
+        StringBuilder sub = new StringBuilder("< ");
         for(DataType<?> dataType : subspace){
             if(dataType == null){
-                sub += "* ";
+                sub.append("* ");
             } else {
-                sub += dataType.getValue() + " ";
+                sub.append(dataType.getValue()).append(" ");
             }
         }
-        sub += ">";
-        return sub;
+        sub.append(">");
+        return sub.toString();
     }
 
     private void EnumerateInsight(ArrayList<DataType<?>> subspace, int dimension, CompositeExtractor extractor){
 
-        String sub = getSubspace(subspace);
+        String sub = getSubspaceString(subspace);
         System.out.println("SG(" + sub + ", " + database.getDimensionName(dimension) + dimension + ") \t\t" + extractor.toString() +
                  " " + isValid(subspace, dimension, extractor));
 
@@ -119,12 +110,8 @@ public class TopKInsights {
                 return;
             }
 
-            Aggregator aggregator = (Aggregator) extractor.getPair(0).getType();
-            double impact = aggregator.getOutput(database, subspace, dimension) / database.getMeasureSum();
-            for(InsightType insightType : insightTypes){
-                if(insightType instanceof ShapeInsight && !database.getRow(0).get(dimension).isOrdinal()){
-                    continue;
-                }
+            double impact = database.getSubspaceSum(subspace) / totalSum;
+            for(InsightType insightType : Config.insightTypes){
                 double significance = insightType.getSignificance(F);
 
                 double S = significance * impact;
@@ -132,10 +119,10 @@ public class TopKInsights {
                     assert priorityQueue.peek() != null;
                     if(S > priorityQueue.peek().getValue()){
                         priorityQueue.poll();
-                        priorityQueue.add(new Insight(subspace, dimension, extractor, S));
+                        priorityQueue.add(new Insight(subspace, dimension, extractor, S, insightType, F));
                     }
                 }else{
-                    priorityQueue.add(new Insight(subspace, dimension, extractor, S));
+                    priorityQueue.add(new Insight(subspace, dimension, extractor, S, insightType, F));
                 }
             }
 
@@ -158,8 +145,8 @@ public class TopKInsights {
             F = new HashMap<>();
         }
 
+        ArrayList<DataType<?>> newSubspace = Database.getSubspaceCopy(subspace);
         for(DataType<?> value : database.getValues(dimension)){
-            ArrayList<DataType<?>> newSubspace = (ArrayList<DataType<?>>) subspace.clone();
             newSubspace.set(dimension, value);
             Double M = RecursiveExtract(newSubspace, dimension, t, extractor);
             if(M != null) {
@@ -184,8 +171,9 @@ public class TopKInsights {
             }else{
                 FLevel = new HashMap<>();
             }
+
+            ArrayList<DataType<?>> childSubspace = Database.getSubspaceCopy(subspace);
             for(DataType<?> value : database.getValues(extractorDimension)){
-                ArrayList<DataType<?>> childSubspace = (ArrayList<DataType<?>>) subspace.clone();
                 childSubspace.set(extractorDimension, value);
 
                 Double M = RecursiveExtract(childSubspace, dimension, level - 1, extractor);
