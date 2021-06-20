@@ -34,3 +34,5 @@ It's located at [http://localhost:5000](http://localhost:3000).
 ### `npm run dev`
 Runs the entire project in development mode.
 
+![Demo](https://s6.gifyu.com/images/topkdemo.gif)
+
