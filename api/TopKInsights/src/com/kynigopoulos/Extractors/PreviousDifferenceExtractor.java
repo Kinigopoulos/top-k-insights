@@ -12,8 +12,8 @@ public class PreviousDifferenceExtractor extends Extractor{
     }
 
     @Override
-    public boolean satisfiesRequirements(DataType<?> input) {
-        return input.isOrdinal();
+    public boolean satisfiesRequirements(Database database, int dimension) {
+        return database.isOrdinal(dimension);
     }
 
     public Double getOutput(Map<DataType<?>, Double> input, DataType<?> value) {

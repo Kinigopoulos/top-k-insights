@@ -1,10 +1,7 @@
 package com.kynigopoulos.Extractors;
 
 import com.kynigopoulos.DataType;
-import com.kynigopoulos.Database;
 
-import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.Map;
 
 public class PercentageExtractor extends Extractor {

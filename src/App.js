@@ -2,10 +2,30 @@ import React, {useEffect, useState} from "react";
 import axios from "axios";
 import './App.css';
 import Graph from "./Graph";
+import Help from "./Components/Help";
+import Settings from "./Components/Settings";
 
 function App() {
 
     const [druidRunning, setDruidRunning] = useState(true);
+    const [openDialog, setOpenDialog] = useState(0);
+    const [ports, setPorts] = useState({
+        Broker: "http://localhost:8082",
+        Coordinator: "http://localhost:8081",
+        Router: "http://localhost:8888"
+    });
+
+    const aggregators = ["Sum", "Count", "Mean"];
+    const defaultExtractors = [
+        "PreviousDifferenceExtractor",
+        "RankExtractor",
+        "PercentageExtractor",
+        "AverageDifferenceExtractor"
+    ];
+    const defaultInsightTypes = [
+        "Point",
+        "Shape"
+    ]
 
     function MainBody() {
         const [dataSources, setDataSources] = useState([]);
@@ -13,20 +33,26 @@ function App() {
         const [options, setOptions] = useState({
             datasource: "",
             columns: [],
+            ordinal: [],
             measureColumn: "",
             k: 1,
-            t: 1
+            t: 1,
+            aggregator: aggregators[0],
+            extractors: [ ...defaultExtractors ],
+            insightTypes: [ ...defaultInsightTypes ]
         });
         const [isExecuting, setIsExecuting] = useState(false);
         const [dimensions, setDimensions] = useState([]);
         const [insights, setInsights] = useState([]);
         const [selectedInsight, setSelectedInsight] = useState(-1);
 
+        console.log(options.insightTypes)
+
         useEffect(() => {
-            axios.get("/data-sources").then(res => {
-                console.log(res);
-                setDataSources(res.data);
-            }).catch(err => {
+            axios.get("/data-sources", {params: {coordinator: ports.Coordinator}})
+                .then(res => {
+                    setDataSources(res.data);
+                }).catch(err => {
                 setDruidRunning(false);
                 console.log(err);
             })
@@ -48,7 +74,7 @@ function App() {
             }
             setColumns(columns);
             setOptions(options => {
-                return {...options, columns: [], measureColumn: ''}
+                return {...options, columns: [], ordinal: [], measureColumn: ''}
             });
         }, [options.datasource, dataSources])
 
@@ -64,13 +90,33 @@ function App() {
 
         function toggleColumn(e) {
             let newColumns = options.columns;
+            let newOrdinal = options.ordinal;
             if (e.target.checked) {
                 newColumns.push(e.target.value);
             } else {
                 const index = newColumns.indexOf(e.target.value);
-                if (index > -1) newColumns.splice(index, 1);
+                if (index > -1){
+                    newColumns.splice(index, 1);
+                }
+                const ordinalIndex = newOrdinal.indexOf(e.target.value);
+                if(ordinalIndex > -1) {
+                    newOrdinal.splice(ordinalIndex, 1);
+                }
             }
-            setOptions({...options, columns: newColumns});
+            setOptions({...options, columns: newColumns, ordinal: newOrdinal});
+        }
+
+        function toggleOrdinal(e){
+            let newOrdinal = options[e.target.name];
+            if (e.target.checked) {
+                newOrdinal.push(e.target.value);
+            } else {
+                const ordinalIndex = newOrdinal.indexOf(e.target.value);
+                if(ordinalIndex > -1) {
+                    newOrdinal.splice(ordinalIndex, 1);
+                }
+            }
+            setOptions({...options, [e.target.name]: newOrdinal});
         }
 
         const ExecuteQuery = () => {
@@ -89,9 +135,15 @@ function App() {
             } else if (options.t <= 0) {
                 window.alert("τ must be a positive number");
                 return;
+            } else if (options.extractors.length === 0){
+                window.alert("Extractors' size cannot be 0");
+                return;
+            } else if (options.insightTypes.length === 0){
+                window.alert("Insight types' size cannot be 0");
+                return;
             }
             setIsExecuting(true);
-            axios.post("/run", {options})
+            axios.post("/run", {options: options, ports: {broker: ports.Broker, router: ports.Router}})
                 .then(res => {
                     console.log(res.data);
                     setIsExecuting(false);
@@ -101,15 +153,18 @@ function App() {
                         if (index > -1) columns.splice(index, 1);
                         columns.push(options.measureColumn);
                         return columns;
-                    })
+                    });
                     setInsights(res.data);
                 }).catch(err => {
-                console.log(err);
-            })
+                    console.log(err.response.data.message);
+                    window.alert(err.response.data.message);
+                    setIsExecuting(false);
+                    setInsights([]);
+                })
         }
 
         const extractorToString = data => {
-            const extractorSign = ex => {
+            var extractorSign = ex => {
                 switch (ex) {
                     case 'PreviousDifferenceExtractor':
                         return '∆prev'
@@ -160,7 +215,11 @@ function App() {
                         })}
                     </select>
 
-                    <span>Domain Columns</span>
+                    <div className="domainColumn">
+                        <span>Domain Columns</span>
+                        <span>Ordinal</span>
+                    </div>
+
                     {columns.length === 0 &&
                     <>
                         <br/>
@@ -171,13 +230,25 @@ function App() {
                         {
                             columns.map((column, key) => {
                                 return (
-                                    <React.Fragment key={key}>
-                                        <input type="checkbox" onChange={toggleColumn}
-                                               id={`columns${column}`}
-                                               checked={options.columns.includes(column)}
-                                               name="columns" value={column}/>
-                                        <label htmlFor={`columns${column}`}>{column}</label><br/>
-                                    </React.Fragment>
+                                    <div className={`domainColumn ${key % 2 && 'brighten'}`} key={key}>
+                                        <div>
+                                            <input type="checkbox" onChange={toggleColumn}
+                                                   id={`columns${column}`}
+                                                   checked={options.columns.includes(column)}
+                                                   name="columns" value={column}/>
+                                            &nbsp;
+                                            <label htmlFor={`columns${column}`}>{column}</label>
+                                        </div>
+                                        {options.columns.includes(column) &&
+                                        <div>
+                                            <input type="checkbox" onChange={toggleOrdinal}
+                                                   name="ordinal"
+                                                   value={column}
+                                            />
+                                        </div>
+                                        }
+
+                                    </div>
                                 )
                             })
                         }
@@ -202,6 +273,61 @@ function App() {
 
                     <span>τ-depth</span>
                     <input className="" name="t" type="number" onChange={setNumericOption} value={options.t}/>
+
+                    <span className="mt-1">Aggregator Function</span>
+                    <select name="aggregator" id="aggregator" onChange={setOption} value={options.aggregator}>
+                        {aggregators.map((column, key) => {
+                            return (
+                                <option value={column} key={key}>
+                                    {column}
+                                </option>
+                            )
+                        })}
+                    </select>
+
+                    <span>Extractors</span>
+                    <form>
+                        {
+                            defaultExtractors.map((column, key) => {
+                                return (
+                                    <div className={`${key % 2 && 'brighten'}`} key={key}>
+                                        <div>
+                                            <input type="checkbox" onChange={toggleOrdinal}
+                                                   id={`extractor${column}`}
+                                                   checked={options.extractors.includes(column)}
+                                                   name="extractors"
+                                                   value={column}/>
+                                            &nbsp;
+                                            <label htmlFor={`extractor${column}`}>{column}</label>
+                                        </div>
+                                    </div>
+                                )
+                            })
+                        }
+                    </form>
+                    <br/>
+
+                    <span>Insight Types</span>
+                    <form>
+                        {
+                            defaultInsightTypes.map((column, key) => {
+                                return (
+                                    <div className={`${key % 2 && 'brighten'}`} key={key}>
+                                        <div>
+                                            <input type="checkbox" onChange={toggleOrdinal}
+                                                   id={`insightType${column}`}
+                                                   checked={options.insightTypes.includes(column)}
+                                                   name="insightTypes"
+                                                   value={column}/>
+                                            &nbsp;
+                                            <label htmlFor={`insightType${column}`}>{column}</label>
+                                        </div>
+                                    </div>
+                                )
+                            })
+                        }
+                    </form>
+                    <br/>
 
                     <button onClick={ExecuteQuery}>Execute</button>
                 </div>
@@ -276,17 +402,37 @@ function App() {
         );
     }
 
+    function WindowComponent({children}) {
+        return (
+            <div className="windowDialog" key="WindowComponent">
+                <div className="windowDialogCloseContainer" onClick={() => setOpenDialog(0)}>
+                    <i className="fa fa-times windowDialogClose" aria-hidden="true"/>
+                </div>
+                {children}
+            </div>
+        )
+    }
+
     return (
         <div className="mainContainer">
             <header className="header">
                 <span className="headerTitle">Top-K Insights Extractor</span>
-                <div className="headerHelpIcon">
-                    <i className="fa fa-question-circle" aria-hidden="true"/>
+                <div style={{display: "flex", marginRight: "2rem"}}>
+                    <div className="headerHelpIcon" onClick={() => setOpenDialog(2)}>
+                        <i className="fa fa-cog" aria-hidden="true"/>
+                    </div>
+
+                    <div className="headerHelpIcon" onClick={() => setOpenDialog(1)}>
+                        <i className="fa fa-question-circle" aria-hidden="true"/>
+                    </div>
                 </div>
             </header>
 
-            <div className="mainBody">
-                {druidRunning ? <MainBody/> : <ErrorMessage message="Hi"/>}
+            {openDialog === 1 && <WindowComponent children={<Help/>}/>}
+            {openDialog === 2 && <WindowComponent children={<Settings ports={ports} setPorts={setPorts}/>}/>}
+
+            <div className={`mainBody ${openDialog !== 0 && "disabledMainBody"}`}>
+                {druidRunning ? <MainBody/> : <ErrorMessage/>}
             </div>
         </div>
     );

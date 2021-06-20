@@ -1,21 +1,23 @@
 package com.kynigopoulos.InsightTypes;
 
 import com.kynigopoulos.DataType;
+
+import org.apache.commons.math3.fitting.GaussianCurveFitter;
+import org.apache.commons.math3.fitting.WeightedObservedPoints;
 import org.apache.commons.math3.util.FastMath;
 
 import org.apache.commons.math3.distribution.NormalDistribution;
 import org.apache.commons.math3.stat.regression.SimpleRegression;
 
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.Collections;
 import java.util.Map;
 
 public class PointInsight implements InsightType {
 
-    NormalDistribution distribution;
-    public PointInsight(){
-        distribution = new NormalDistribution(0, 10);
+
+    public PointInsight() {
+
     }
 
     @Override
@@ -23,53 +25,71 @@ public class PointInsight implements InsightType {
         ArrayList<Double> sortedValues = new ArrayList<>(F.values());
         sortedValues.sort(Collections.reverseOrder());
 
-        for (Double d : sortedValues){
+        for (Double d : sortedValues) {
             System.out.print(d + " ");
         }
         System.out.println();
 
         double lastElement = sortedValues.get(sortedValues.size() - 1);
-        if(sortedValues.get(0).equals(lastElement)){
+        double max = sortedValues.remove(0);
+        if (max == lastElement) {
             return 0;
         }
-        if(lastElement <= 0){
+
+        if(lastElement < 1){
+            double inc = -lastElement + 1;
+            max += inc;
             for(int i = 0; i < sortedValues.size(); i++){
-                sortedValues.set(i, sortedValues.get(i) - lastElement + 1);
+                sortedValues.set(i, sortedValues.get(i) + inc);
             }
         }
-        for (Double d : sortedValues){
-            System.out.print(d + " ");
-        }
-        System.out.println();
 
-        double max = sortedValues.remove(0);
-        ArrayList<Double> errors = new ArrayList<>();
+        ArrayList<Double> logX = new ArrayList<>();
+        ArrayList<Double> logY = new ArrayList<>();
 
-        SimpleRegression regression = new SimpleRegression();
-
-        for (int i = 0; i < sortedValues.size(); i++){
-            double logX = FastMath.log(2, sortedValues.get(i));
-            errors.add(logX);
-            regression.addData(logX, FastMath.log(2, i + 1));
+        for(int i = 0; i < sortedValues.size(); i++){
+            logX.add(FastMath.log(2, i + 2));
+            logY.add(FastMath.log(2, sortedValues.get(i)));
         }
 
+        System.out.println("Ranking");
+        for (int i = 0; i < sortedValues.size(); i++) {
+            System.out.println((i + 2) + " " + sortedValues.get(i));
 
-        double slope = regression.getSlope();
-        double intercept = regression.getIntercept();
-        System.out.println(slope + " " + intercept);
-
-        for (int i = 0; i < sortedValues.size(); i++){
-            errors.set(i, Math.pow(2, intercept + slope * errors.get(i)) - sortedValues.get(i));
         }
 
-        double maxError = Math.pow(2, intercept) * max;
-        System.out.println("maxError: " + maxError);
+        SimpleRegression simpleRegression = new SimpleRegression();
+        for(int i = 0; i < sortedValues.size(); i++){
+            simpleRegression.addData(logX.get(i), logY.get(i));
+        }
+        double slope = simpleRegression.getSlope();
+        double intercept = FastMath.pow(2, simpleRegression.getIntercept());
 
-        double p = distribution.cumulativeProbability(max - maxError);
-        System.out.println("P value: " + p);
+        System.out.println(intercept + "*x^" + slope);
+
+        ArrayList<Double> residuals = new ArrayList<>();
+        for(int i = 0; i < sortedValues.size(); i++){
+            double predictedValue = intercept * FastMath.pow(i + 2, slope);
+            residuals.add(sortedValues.get(i) - predictedValue);
+            System.out.println("residual " + (i + 2) + ": " + residuals.get(i));
+        }
+        double xMaxErr = max - intercept;
+        System.out.println("Max Err: " + xMaxErr);
 
 
-        return p;
+        WeightedObservedPoints obs = new WeightedObservedPoints();
+        for(int i = 0; i < residuals.size(); i++){
+            obs.add(i + 2, residuals.get(i));
+        }
+
+        double[] parameters = GaussianCurveFitter.create().fit(obs.toList());
+
+        System.out.println("Got params: " + parameters[1] + " " + parameters[2]);
+
+        NormalDistribution normalDistribution = new NormalDistribution(parameters[1], parameters[2]);
+
+
+        return normalDistribution.cumulativeProbability(xMaxErr);
     }
 
     @Override

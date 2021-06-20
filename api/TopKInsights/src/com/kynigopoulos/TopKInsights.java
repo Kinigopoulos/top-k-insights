@@ -21,6 +21,10 @@ public class TopKInsights {
         this.t = t;
     }
 
+    /**
+     * @param priorityQueue is the max-heap that stores the insights
+     * @return the insights in an ArrayList
+     */
     private static ArrayList<Insight> heapToArrayList(PriorityQueue<Insight> priorityQueue){
         ArrayList<Insight> result = new ArrayList<>();
         while (!priorityQueue.isEmpty()){
@@ -29,7 +33,9 @@ public class TopKInsights {
         return result;
     }
 
-
+    /**
+     * @return an ArrayList with Top-K insights with τ-depth
+     */
     public ArrayList<Insight> getInsights(){
 
         if(database.size() == 0){
@@ -38,14 +44,16 @@ public class TopKInsights {
 
         int[] domainDimensions = database.getDomainDimensions();
 
+        //Initializing heap with k capacity
         priorityQueue = new PriorityQueue<>(k);
+        //Storing the total sum of measures because it is needed for every insight evaluation
         totalSum = database.getMeasureSum();
 
         //Enumerate all possible Extractors
         ArrayList<CompositeExtractor> compositeExtractors =
                 CompositeExtractor.findCombinations(database, t);
 
-        //Initialize subspace. Null value represents *.
+        //Initialize subspace. Null value represents *
         ArrayList<DataType<?>> subspace = database.getSubspace();
 
         //Starting procedure of enumerating insights
@@ -73,6 +81,12 @@ public class TopKInsights {
         return heapToArrayList(priorityQueue);
     }
 
+    /**
+     * @param subspace Subspace of the sibling group
+     * @param dividingDimension Dimension of the sibling group
+     * @param extractor The extractor
+     * @return if it is valid to generate insights with this pair
+     */
     private boolean isValid(ArrayList<DataType<?>> subspace, int dividingDimension, CompositeExtractor extractor){
         for(int i = 1; i < t; i++){
             int Dx = extractor.getPair(i).getDimension();
@@ -84,6 +98,10 @@ public class TopKInsights {
         return true;
     }
 
+    /**
+     * @param subspace the subspace
+     * @return a String with the subspace's info
+     */
     public static String getSubspaceString(ArrayList<DataType<?>> subspace){
         StringBuilder sub = new StringBuilder("< ");
         for(DataType<?> dataType : subspace){
@@ -97,6 +115,11 @@ public class TopKInsights {
         return sub.toString();
     }
 
+    /**
+     * @param subspace The subspace of the sibling group
+     * @param dimension The dimension of the sibling group
+     * @param extractor The composite extractor
+     */
     private void EnumerateInsight(ArrayList<DataType<?>> subspace, int dimension, CompositeExtractor extractor){
 
         String sub = getSubspaceString(subspace);
@@ -136,10 +159,16 @@ public class TopKInsights {
 
     }
 
+    /**
+     * @param subspace The subspace of the sibling group
+     * @param dimension The dimension of the sibling group
+     * @param extractor The composite extractor
+     * @return the extracted set values
+     */
     private Map<DataType<?>, Double> ExtractF(ArrayList<DataType<?>> subspace, int dimension, CompositeExtractor extractor){
 
         Map<DataType<?>, Double> F;
-        if(database.getRow(0).get(dimension).isOrdinal()){
+        if(database.isOrdinal(dimension)){
             F = new TreeMap<>();
         }else{
             F = new HashMap<>();
@@ -156,6 +185,14 @@ public class TopKInsights {
         return F;
     }
 
+    /**
+     *
+     * @param subspace The subspace of the sibling group
+     * @param dimension The dimension of the sibling group
+     * @param level The current level of extractor
+     * @param extractor The composite extractor
+     * @return a value of the result set
+     */
     private Double RecursiveExtract(
             ArrayList<DataType<?>> subspace,
             int dimension,
@@ -166,7 +203,7 @@ public class TopKInsights {
             Map<DataType<?>, Double> FLevel;
             int extractorDimension = extractor.getPair(level - 1).getDimension();
 
-            if(database.getRow(0).get(extractorDimension).isOrdinal()){
+            if(database.isOrdinal(extractorDimension)){
                 FLevel = new TreeMap<>();
             }else{
                 FLevel = new HashMap<>();

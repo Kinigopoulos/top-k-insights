@@ -31,18 +31,6 @@ public class Insight implements Comparable<Insight> {
         this.resultSet = resultSet;
     }
 
-    public ArrayList<DataType<?>> getSubspace(){
-        return subspace;
-    }
-
-    public int getDimension() {
-        return dimension;
-    }
-
-    public CompositeExtractor getCompositeExtractor() {
-        return compositeExtractor;
-    }
-
     public double getValue(){
         return value;
     }

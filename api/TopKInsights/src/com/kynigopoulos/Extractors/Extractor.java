@@ -1,9 +1,8 @@
 package com.kynigopoulos.Extractors;
 
 import com.kynigopoulos.DataType;
+import com.kynigopoulos.Database;
 
-import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.Map;
 
 public abstract class Extractor {
@@ -12,7 +11,7 @@ public abstract class Extractor {
 
     }
 
-    public boolean satisfiesRequirements(DataType<?> input){
+    public boolean satisfiesRequirements(Database database, int dimension){
         return true;
     }
 
@@ -22,7 +21,7 @@ public abstract class Extractor {
 
     public Double getOutput(Map<DataType<?>, Double> input, DataType<?> value){
         return null;
-    };
+    }
 
     @Override
     public String toString() {

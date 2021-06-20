@@ -2,22 +2,16 @@ package com.kynigopoulos;
 
 import java.util.Objects;
 
-public class DataType<T> implements Comparable<DataType<T>>{
+public class DataType<T extends Comparable<T>> implements Comparable<DataType<T>>{
 
     private final T value;
-    private final boolean isOrdinal;
 
     public DataType(T value){
         this.value = value;
-        isOrdinal = value instanceof Number;
     }
 
     public T getValue(){
         return value;
-    }
-
-    public boolean isOrdinal(){
-        return isOrdinal;
     }
 
     @Override
@@ -30,18 +24,11 @@ public class DataType<T> implements Comparable<DataType<T>>{
 
     @Override
     public int hashCode() {
-        return Objects.hash(value, isOrdinal);
+        return Objects.hash(value);
     }
 
     @Override
     public int compareTo(DataType<T> o) {
-        Number a = (Number) o.value;
-        Number b = (Number) value;
-        if(a.doubleValue() < b.doubleValue()){
-            return 1;
-        } else if (a.doubleValue() == b.doubleValue()){
-            return 0;
-        }
-        return -1;
+        return value.compareTo(o.value);
     }
 }

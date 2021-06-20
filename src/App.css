@@ -12,6 +12,47 @@
     line-height: 3rem;
     display: flex;
     justify-content: space-between;
+    z-index: 10;
+}
+
+.disabledMainBody {
+    transition: opacity 0.2s ease-in;
+    pointer-events: none;
+    opacity: 0.7;
+}
+
+.windowDialog{
+    position: absolute;
+    top: 4rem;
+    left: 0;
+    right: 0;
+    bottom: 4rem;
+    margin-left: auto;
+    margin-right: auto;
+    width: 80%;
+    z-index: 5;
+    overflow-y: scroll;
+    border: 2px solid var(--secondary-color);
+    border-radius: 1rem;
+    background: var(--secondary-bg-color);
+}
+
+.windowDialogCloseContainer{
+    position: relative;
+}
+
+.windowDialogClose{
+    position: fixed;
+    font-size: 2.2rem;
+    left: 90%;
+    color: var(--secondary-bg-color);
+    height: 2.8rem;
+    width: 2.8rem;
+    line-height: 2.8rem;
+    background: var(--main-icon-color);
+    text-align: center;
+    border-radius: 50%;
+    cursor: pointer;
 }
 
 .headerTitle{
@@ -20,9 +61,10 @@
 }
 
 .headerHelpIcon{
-    margin-right: 50px;
+    margin-right: 1.2rem;
     font-size: 1.1rem;
     color: var(--main-icon-color);
+    cursor: pointer;
 }
 
 .errorMessage{
@@ -69,6 +111,10 @@
     background: var(--selection-button-color);
 }
 
+a{
+    color: var(--main-icon-color);
+}
+
 .inputDataContainer{
     padding: 1rem 1rem 1rem 0.4rem;
     margin: 1rem;
@@ -95,6 +141,16 @@ input[type="checkbox"]{
     margin: 0;
     padding: 0;
     width: auto;
+}
+
+.domainColumn{
+    display: flex;
+    justify-content: space-between;
+}
+
+.brighten{
+    filter: brightness(1.2);
+    background: var(--secondary-bg-color);
 }
 
 button{

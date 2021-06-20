@@ -8,13 +8,15 @@ public class Database {
     private final ArrayList<HashMap<Object, DataType<?>>> domainValues;
     private final int[] domainDimensions;
     private final String[] dimensions;
+    private final boolean[] ordinal;
     private final int measureIndex;
 
-    public Database(String[] dimensions, int[] domainDimensions, int measureIndex) {
+    public Database(String[] dimensions, int[] domainDimensions, int measureIndex, boolean[] ordinal) {
         data = new ArrayList<>();
         this.dimensions = dimensions;
         this.domainDimensions = domainDimensions;
         this.measureIndex = measureIndex;
+        this.ordinal = ordinal;
 
         domainValues = new ArrayList<>(dimensions.length);
         for (int i = 0; i < dimensions.length; i++) {
@@ -36,12 +38,9 @@ public class Database {
             }
             data.add(row);
         } else {
-            System.out.println("Wrong size");
+            System.out.println("Wrong size of columns, expected " + dimensions.length +
+                    " and got " + row.size());
         }
-    }
-
-    public ArrayList<DataType<?>> getRow(int index) {
-        return data.get(index);
     }
 
     /**
@@ -109,14 +108,27 @@ public class Database {
         return new ArrayList<>(domainValues.get(dimension).values());
     }
 
+    public Boolean isOrdinal(int dimension){
+        return ordinal[dimension];
+    }
+
+    /**
+     * @return the index/column of the measure value
+     */
     public int getMeasureIndex() {
         return measureIndex;
     }
 
+    /**
+     * @return the number of records in the database
+     */
     public int size() {
         return data.size();
     }
 
+    /**
+     * Prints the database to console
+     */
     public void printTable() {
         for (ArrayList<DataType<?>> tuple : data) {
             for (DataType<?> type : tuple) {

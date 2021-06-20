@@ -11,13 +11,13 @@ public class ShapeInsight implements InsightType {
 
     LogisticDistribution distribution;
     public ShapeInsight(){
-        distribution = new LogisticDistribution(0, 2);
+        distribution = new LogisticDistribution(0.2, 2);
     }
 
     @Override
     public double getSignificance(Map<DataType<?>, Double> F) {
         if(F instanceof TreeMap){
-            if(((TreeMap<DataType<?>, Double>) F).firstEntry() == ((TreeMap<DataType<?>, Double>) F).lastEntry()){
+            if(((TreeMap<DataType<?>, Double>) F).firstEntry().getValue().equals(((TreeMap<DataType<?>, Double>) F).lastEntry().getValue())){
                 return .0;
             }
 

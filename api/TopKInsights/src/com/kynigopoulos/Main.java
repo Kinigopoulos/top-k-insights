@@ -1,13 +1,11 @@
 package com.kynigopoulos;
 
-import org.json.JSONArray;
-
 
 import java.util.ArrayList;
 
 public class Main {
 
-    public static ArrayList<DataType<?>> makeRow(int year, char brand, int sales){
+    public static ArrayList<DataType<?>> makeRow(int year, char brand, int sales) {
         ArrayList<DataType<?>> row = new ArrayList<>();
 
         row.add(new DataType<>(year));
@@ -17,16 +15,11 @@ public class Main {
         return row;
     }
 
-    public static void printArrayList(ArrayList<?> arrayList){
-        for(Object object : arrayList){
-            System.out.println(object);
-        }
-    }
-
-    public static void main(String[] args){
+    public static void main(String[] args) {
         int[] domainDimensions = new int[]{0, 1};
         int measureDimension = 2;
-        Database database = new Database(new String[]{"Year", "Brand", "Sales"}, domainDimensions, measureDimension);
+        boolean[] ordinal = new boolean[]{true, false, true};
+        Database database = new Database(new String[]{"Year", "Brand", "Sales"}, domainDimensions, measureDimension, ordinal);
 
         database.addRow(makeRow(2010, 'F', 13));
         database.addRow(makeRow(2011, 'F', 10));
@@ -60,9 +53,9 @@ public class Main {
 
         ArrayList<CompositeExtractor> extractors = CompositeExtractor.findCombinations(database, t);
         System.out.println("Size of possible extractors: " + extractors.size());
-        for(CompositeExtractor extractor : extractors){
+        for (CompositeExtractor extractor : extractors) {
             System.out.print("<");
-            for(int i = 0; i < t; i++){
+            for (int i = 0; i < t; i++) {
                 ExtractorPair<?> extractorPair = extractor.getPair(i);
                 System.out.print("(" + extractorPair.getType().toString()
                         + ", " + database.getDimensionName(extractorPair.getDimension()) + ")");
@@ -70,32 +63,50 @@ public class Main {
             System.out.println(">");
         }
 
-        for(Insight insight : insights){
+        for (Insight insight : insights) {
             //System.out.println(insight.toString());
             System.out.println(insight.toJSONString());
         }
 
     }
 
-    public static String getResults(String data, String columns, String measureColumnName, Integer k, Integer t){
+    public static String getResults(
+            String data,
+            String columns,
+            String[] ordinalColumns,
+            String measureColumnName,
+            Integer k,
+            Integer t,
+            String aggregator,
+            String[] extractors,
+            String[] insightTypes
+    ) {
+        try {
+            Database database = JSONController.toDatabase(data, columns, ordinalColumns, measureColumnName);
 
-        Database database = JSONController.toDatabase(data, columns, measureColumnName);
-        TopKInsights topKInsights = new TopKInsights(database, k, t);
+            Config.setAggregatorByString(aggregator);
+            Config.setExtractorsByString(extractors);
+            Config.setInsightTypesByString(insightTypes);
 
-        database.printTable();
-        ArrayList<Insight> insights = topKInsights.getInsights();
+            TopKInsights topKInsights = new TopKInsights(database, k, t);
+            ArrayList<Insight> insights = topKInsights.getInsights();
+
+            //Wrapping the response in an array and sending it back.
+            StringBuilder response = new StringBuilder();
+            response.append("[ ");
+            for (int i = 0; i < insights.size(); i++) {
+                System.out.println(insights.get(i).toString());
+                response.append(insights.get(i).toJSONString());
+                if (i != insights.size() - 1) response.append(", ");
+            }
+            response.append(" ]");
 
 
-        StringBuilder response = new StringBuilder();
-        response.append("[ ");
-        for(int i = 0; i < insights.size(); i++){
-            System.out.println(insights.get(i).toString());
-            response.append(insights.get(i).toJSONString());
-            if(i != insights.size() - 1) response.append(", ");
+            return response.toString();
+        } catch (Exception exception){
+            System.err.println(exception);
         }
-        response.append(" ]");
-
-        return response.toString();
+        return "";
     }
 
 }

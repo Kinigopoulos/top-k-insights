@@ -24,7 +24,7 @@ public class CompositeExtractor {
 
     private static ArrayList<CompositeExtractor> makeCompositeExtractor(
             ArrayList<CompositeExtractor> extractors,
-            ArrayList<DataType<?>> row,
+            Database database,
             int level,
             int[] domainDimensions
     )
@@ -40,7 +40,7 @@ public class CompositeExtractor {
                     continue;
                 }
                 for(int dimension : domainDimensions){
-                    if(extractor.satisfiesRequirements(row.get(dimension))) {
+                    if(extractor.satisfiesRequirements(database, dimension)) {
                         CompositeExtractor Ce = new CompositeExtractor(compositeExtractor);
                         Ce.pairs[level] = new ExtractorPair<>(dimension, extractor);
                         newExtractors.add(Ce);
@@ -49,7 +49,7 @@ public class CompositeExtractor {
             }
         }
 
-        return makeCompositeExtractor(newExtractors, row,level + 1, domainDimensions);
+        return makeCompositeExtractor(newExtractors, database,level + 1, domainDimensions);
     }
 
     public static ArrayList<CompositeExtractor> findCombinations(
@@ -58,14 +58,13 @@ public class CompositeExtractor {
     ) {
         CompositeExtractor.t = t;
 
-        ArrayList<DataType<?>> row = database.getRow(0);
         int[] domainDimensions = database.getDomainDimensions();
         int measureDimension = database.getMeasureIndex();
 
         ArrayList<CompositeExtractor> baseExtractor = new ArrayList<>();
         baseExtractor.add(new CompositeExtractor(new ExtractorPair<>(measureDimension, Config.aggregator)));
 
-        return makeCompositeExtractor(baseExtractor, row,1, domainDimensions);
+        return makeCompositeExtractor(baseExtractor, database,1, domainDimensions);
     }
 
     @Override

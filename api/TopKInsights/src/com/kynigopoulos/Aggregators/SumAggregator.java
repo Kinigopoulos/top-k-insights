@@ -20,7 +20,7 @@ public class SumAggregator extends Aggregator {
 
     @Override
     public String toString() {
-        return "SUM";
+        return "Sum";
     }
 
 }

@@ -6,6 +6,7 @@
     --secondary-color: #a1a6ba;
     --button-color: #0083dc;
     --selection-button-color: rgba(125,188,255,0.6);
+    --dialog-bg-color: #10547b;
 }
 
 body {
