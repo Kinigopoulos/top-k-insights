@@ -25,7 +25,7 @@ function App() {
     const defaultInsightTypes = [
         "Point",
         "Shape"
-    ]
+    ];
 
     function MainBody() {
         const [dataSources, setDataSources] = useState([]);
@@ -67,7 +67,9 @@ function App() {
                     dataSource.segments.forEach(segment => {
                         const dimensions = segment['dimensions'].split(',');
                         dimensions.forEach(dimension => {
-                            columns.push(dimension);
+                            if(!columns.includes(dimension)){
+                                columns.push(dimension);
+                            }
                         })
                     })
                 })
@@ -164,7 +166,7 @@ function App() {
         }
 
         const extractorToString = data => {
-            var extractorSign = ex => {
+            const extractorSign = ex => {
                 switch (ex) {
                     case 'PreviousDifferenceExtractor':
                         return '∆prev'

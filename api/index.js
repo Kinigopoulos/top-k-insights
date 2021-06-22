@@ -3,10 +3,33 @@ const app = express();
 
 const axios = require('axios');
 let java = require("java");
-java.classpath.push("./TopKInsights/out/artifacts/TopKInsights_jar/TopKInsights.jar");
+
+const jarPath = "./TopKInsights/out/artifacts/TopKInsights_jar";
+java.classpath.push(`${jarPath}/TopKInsights.jar`);
 
 app.use(express.json());
 const port = 5000;
+
+const fs = require('fs');
+
+function saveFile(jsonData, filename) {
+    fs.writeFile(`${jarPath}/${filename}.txt`, jsonData, function (err) {
+        if (err) {
+            console.log(err);
+        }
+    });
+}
+
+function arrayToString(array) {
+    let res = "";
+    for(let i = 0; i < array.length; i++){
+        res += array[i]
+        if(i !== array.length - 1){
+            res += ",";
+        }
+    }
+    return res;
+}
 
 app.get('/data-sources', (req, res, next) => {
     const coordinator = req.query.coordinator;
@@ -22,7 +45,7 @@ app.get('/data-sources', (req, res, next) => {
 
 app.post('/run', async (req, res, next) => {
     const {options, ports} = req.body;
-    const { datasource, columns, ordinal, measureColumn, k, t, aggregator, extractors, insightTypes } = options;
+    const {datasource, columns, ordinal, measureColumn, k, t, aggregator, extractors, insightTypes} = options;
 
     let queryColumns = columns;
     let ordinalColumns = ordinal;
@@ -51,7 +74,7 @@ app.post('/run', async (req, res, next) => {
             return obj['event']
         });
 
-        console.log(result);
+        console.log("Rows: " + result.length);
 
         const columnTypesResponse = await axios.post(`${ports.router}/druid/v2/sql`, {
             "query": `SELECT COLUMN_NAME, DATA_TYPE FROM INFORMATION_SCHEMA.COLUMNS\n
@@ -62,20 +85,21 @@ WHERE TABLE_SCHEMA = 'druid' AND TABLE_NAME = '${datasource}'`
             return queryColumns.includes(column.COLUMN_NAME);
         });
 
+        saveFile(JSON.stringify(result), datasource);
         console.log(columns);
 
         java.callStaticMethod("com.kynigopoulos.Main", "getResults",
-            JSON.stringify(result), JSON.stringify(columns), ordinalColumns, measureColumn,
-            k, t, aggregator, extractors, insightTypes,
+            JSON.stringify(result), JSON.stringify(columns), arrayToString(ordinalColumns), measureColumn,
+            k, t, aggregator, arrayToString(extractors), arrayToString(insightTypes),
             function (err, result) {
-            if (err || result === "") {
-                console.log(err);
-                res.status(500).send({message: "Error occurred with the algorithm."});
-                return;
-            }
-            console.log(JSON.parse(result));
-            res.end(result);
-        });
+                if (err || result === "") {
+                    console.log(err);
+                    res.status(500).send({message: "Error occurred with the algorithm."});
+                    return;
+                }
+                console.log(JSON.parse(result));
+                res.end(result);
+            });
     } catch (err) {
         console.log(err);
         next(err.response);

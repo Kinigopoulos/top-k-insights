@@ -123,7 +123,7 @@ public class TopKInsights {
     private void EnumerateInsight(ArrayList<DataType<?>> subspace, int dimension, CompositeExtractor extractor){
 
         String sub = getSubspaceString(subspace);
-        System.out.println("SG(" + sub + ", " + database.getDimensionName(dimension) + dimension + ") \t\t" + extractor.toString() +
+        System.out.println("SG(" + sub + ", " + database.getDimensionName(dimension) + ") \t\t" + extractor.toString(database) +
                  " " + isValid(subspace, dimension, extractor));
 
         if(isValid(subspace, dimension, extractor)){
@@ -136,6 +136,9 @@ public class TopKInsights {
             double impact = database.getSubspaceSum(subspace) / totalSum;
             for(InsightType insightType : Config.insightTypes){
                 double significance = insightType.getSignificance(F);
+                if (significance < 0){
+                    continue;
+                }
 
                 double S = significance * impact;
                 if(priorityQueue.size() == k){
@@ -217,8 +220,12 @@ public class TopKInsights {
                 if(M != null) FLevel.put(value, M);
             }
 
-            Extractor e = (Extractor) extractor.getPair(level - 1).getType();
+            if(FLevel.get(subspace.get(extractorDimension)) == null){
+                return null;
+            }
 
+            Extractor e = (Extractor) extractor.getPair(level - 1).getType();
+            System.out.println(FLevel.size());
             return e.getOutput(FLevel, subspace.get(extractorDimension));
         }
         return ((Aggregator)extractor.getPair(0).getType()).getOutput(database, subspace, dimension);

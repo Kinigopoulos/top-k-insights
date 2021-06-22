@@ -67,11 +67,11 @@ public class CompositeExtractor {
         return makeCompositeExtractor(baseExtractor, database,1, domainDimensions);
     }
 
-    @Override
-    public String toString() {
+
+    public String toString(Database database) {
         String s = "<";
         for(int i = 0; i < t; i++){
-            s += "(" + getPair(i).getType().toString() + ", " + getPair(i).getDimension() + ")";
+            s += "(" + getPair(i).getType().toString() + ", " + database.getDimensionName(getPair(i).getDimension()) + ")";
         }
         s += ">";
         return s;

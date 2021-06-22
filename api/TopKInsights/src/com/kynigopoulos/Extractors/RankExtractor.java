@@ -11,9 +11,9 @@ public class RankExtractor extends Extractor {
     }
 
     public Double getOutput(Map<DataType<?>, Double> input, DataType<?> value) {
-        double rank = 1;
+        double rank = 0;
         for(Double measure : input.values()){
-            if(measure > input.get(value)){
+            if(measure >= input.get(value)){
                 rank += 1;
             }
         }
