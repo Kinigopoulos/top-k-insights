@@ -11,7 +11,7 @@ public class PercentageExtractor extends Extractor {
     }
 
     @Override
-    public boolean isMeaningful() {
+    public boolean isMeaningful(Extractor extractor) {
         return false;
     }
 
@@ -19,6 +19,9 @@ public class PercentageExtractor extends Extractor {
         double sum = 0;
         for(Double measure : input.values()){
             sum += measure;
+        }
+        if (sum == 0){
+            return .0;
         }
 
         return input.get(value) / sum;

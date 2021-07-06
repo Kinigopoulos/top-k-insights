@@ -15,7 +15,7 @@ public abstract class Extractor {
         return true;
     }
 
-    public boolean isMeaningful(){
+    public boolean isMeaningful(Extractor extractor){
         return true;
     }
 

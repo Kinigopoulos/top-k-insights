@@ -190,6 +190,9 @@ button:hover{
 .insightRow:hover{
     filter: brightness(1.2);
 }
+.insightRowObj{
+    cursor: pointer;
+}
 
 .insightCell{
     width: 100%;

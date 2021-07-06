@@ -11,9 +11,10 @@ public class TopKInsights {
     private final Database database;
     private final int k;
     private final int t;
-    private double totalSum;
 
     private PriorityQueue<Insight> priorityQueue;
+    private HashMap<ArrayList<DataType<?>>, Double> impactCube;
+    private HashMap<ArrayList<DataType<?>>, Double> dataCube;
 
     public TopKInsights(Database database, int k, int t){
         this.database = database;
@@ -46,15 +47,16 @@ public class TopKInsights {
 
         //Initializing heap with k capacity
         priorityQueue = new PriorityQueue<>(k);
-        //Storing the total sum of measures because it is needed for every insight evaluation
-        totalSum = database.getMeasureSum();
+
+        dataCube = new HashMap<>();
+        impactCube = new HashMap<>();
 
         //Enumerate all possible Extractors
         ArrayList<CompositeExtractor> compositeExtractors =
                 CompositeExtractor.findCombinations(database, t);
 
         //Initialize subspace. Null value represents *
-        ArrayList<DataType<?>> subspace = database.getSubspace();
+        ArrayList<DataType<?>> subspace = Database.getSubspaceCopy(database.superSubspace);
 
         //Starting procedure of enumerating insights
         for(CompositeExtractor compositeExtractor : compositeExtractors){
@@ -67,9 +69,10 @@ public class TopKInsights {
                     newSubspace.set(domainDimension, value);
 
                     for(int dividingDimension : domainDimensions){
-                        if(domainDimension == dividingDimension){
+                        if(newSubspace.get(dividingDimension) != null){
                             continue;
                         }
+
                         EnumerateInsight(newSubspace, dividingDimension, compositeExtractor);
                     }
                 }
@@ -115,6 +118,15 @@ public class TopKInsights {
         return sub.toString();
     }
 
+    private double getImpact(ArrayList<DataType<?>> subspace){
+        if(impactCube.containsKey(subspace)){
+            return impactCube.get(subspace);
+        }
+        double impact = database.getSubspaceSum(subspace);
+        impactCube.put(subspace, impact);
+        return impact;
+    }
+
     /**
      * @param subspace The subspace of the sibling group
      * @param dimension The dimension of the sibling group
@@ -127,13 +139,20 @@ public class TopKInsights {
                  " " + isValid(subspace, dimension, extractor));
 
         if(isValid(subspace, dimension, extractor)){
+            double impact = getImpact(subspace) / getImpact(Database.getSubspaceCopy(database.superSubspace));
+            if(priorityQueue.size() == k) {
+                assert priorityQueue.peek() != null;
+                if (impact < priorityQueue.peek().getValue()) {
+                    return;
+                }
+            }
+
             Map<DataType<?>, Double> F = ExtractF(subspace, dimension, extractor);
             if(F.size() == 0){
                 System.out.println("All values were null");
                 return;
             }
 
-            double impact = database.getSubspaceSum(subspace) / totalSum;
             for(InsightType insightType : Config.insightTypes){
                 double significance = insightType.getSignificance(F);
                 if (significance < 0){
@@ -225,9 +244,13 @@ public class TopKInsights {
             }
 
             Extractor e = (Extractor) extractor.getPair(level - 1).getType();
-            System.out.println(FLevel.size());
             return e.getOutput(FLevel, subspace.get(extractorDimension));
         }
-        return ((Aggregator)extractor.getPair(0).getType()).getOutput(database, subspace, dimension);
+        if(dataCube.containsKey(subspace)){
+            return dataCube.get(subspace);
+        }
+        double M = ((Aggregator)extractor.getPair(0).getType()).getOutput(database, subspace, dimension);
+        dataCube.put(subspace, M);
+        return M;
     }
 }

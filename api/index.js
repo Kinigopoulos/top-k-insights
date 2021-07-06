@@ -10,16 +10,6 @@ java.classpath.push(`${jarPath}/TopKInsights.jar`);
 app.use(express.json());
 const port = 5000;
 
-const fs = require('fs');
-
-function saveFile(jsonData, filename) {
-    fs.writeFile(`${jarPath}/${filename}.txt`, jsonData, function (err) {
-        if (err) {
-            console.log(err);
-        }
-    });
-}
-
 function arrayToString(array) {
     let res = "";
     for(let i = 0; i < array.length; i++){
@@ -85,7 +75,6 @@ WHERE TABLE_SCHEMA = 'druid' AND TABLE_NAME = '${datasource}'`
             return queryColumns.includes(column.COLUMN_NAME);
         });
 
-        saveFile(JSON.stringify(result), datasource);
         console.log(columns);
 
         java.callStaticMethod("com.kynigopoulos.Main", "getResults",

@@ -1,11 +1,10 @@
 package com.kynigopoulos.InsightTypes;
 
 import com.kynigopoulos.DataType;
-
 import org.apache.commons.math3.analysis.ParametricUnivariateFunction;
 import org.apache.commons.math3.analysis.differentiation.DerivativeStructure;
+import org.apache.commons.math3.distribution.NormalDistribution;
 import org.apache.commons.math3.fitting.AbstractCurveFitter;
-import org.apache.commons.math3.fitting.GaussianCurveFitter;
 import org.apache.commons.math3.fitting.WeightedObservedPoint;
 import org.apache.commons.math3.fitting.WeightedObservedPoints;
 import org.apache.commons.math3.fitting.leastsquares.LeastSquaresBuilder;
@@ -14,9 +13,6 @@ import org.apache.commons.math3.linear.DiagonalMatrix;
 import org.apache.commons.math3.stat.descriptive.moment.Mean;
 import org.apache.commons.math3.stat.descriptive.moment.StandardDeviation;
 import org.apache.commons.math3.util.FastMath;
-
-import org.apache.commons.math3.distribution.NormalDistribution;
-import org.apache.commons.math3.stat.regression.SimpleRegression;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -40,7 +36,10 @@ public class PointInsight implements InsightType {
         }
         System.out.println();
 
-        double max = sortedValues.remove(0);
+        final double max = sortedValues.remove(0);
+        if(max == sortedValues.get(sortedValues.size() - 1)){
+            return .0;
+        }
 
 
         class function implements ParametricUnivariateFunction{
@@ -55,14 +54,14 @@ public class PointInsight implements InsightType {
                 double a = doubles[0];
                 double b = doubles[1];
 
-                DerivativeStructure aDev = new DerivativeStructure(3, 1, 0, a);
-                DerivativeStructure bDev = new DerivativeStructure(3, 1, 1, b);
+                DerivativeStructure aDev = new DerivativeStructure(2, 1, 0, a);
+                DerivativeStructure bDev = new DerivativeStructure(2, 1, 1, b);
 
                 DerivativeStructure y = aDev.multiply(DerivativeStructure.pow(v, bDev));
 
                 return new double[] {
-                        y.getPartialDerivative(1, 0, 0),
-                        y.getPartialDerivative(0, 1, 0)
+                        y.getPartialDerivative(1, 0),
+                        y.getPartialDerivative(0, 1)
                 };
             }
         }
@@ -103,21 +102,17 @@ public class PointInsight implements InsightType {
             points.add(i + 1, sortedValues.get(i));
         }
 
-        final double[] coeffs = fitter.fit(points.toList());
-        System.out.println("++++++++++++++++++++++++++++++++++++");
-        System.out.println(coeffs[0] + " " + coeffs[1]);
-        System.out.println("++++++++++++++++++++++++++++++++++++");
-
-        double slope = coeffs[1];
-        double intercept = coeffs[0];
-
+        final double[] coefficients = fitter.fit(points.toList());
+        final double slope = coefficients[1];
+        final double intercept = coefficients[0];
 
         System.out.println(intercept + "*x^" + slope);
 
         ArrayList<Double> residuals = new ArrayList<>();
         for(int i = 0; i < sortedValues.size(); i++){
             double predictedValue = intercept * FastMath.pow(i + 2, slope);
-            residuals.add(-sortedValues.get(i) + predictedValue);
+            residuals.add(predictedValue -sortedValues.get(i));
+            System.out.println((i + 2) + "\t" + predictedValue);
         }
         double xMaxErr = max - intercept;
         System.out.println("Max Err: " + xMaxErr);
@@ -136,7 +131,7 @@ public class PointInsight implements InsightType {
         double standardDeviation = standardDeviationObj.evaluate(doubles, mean);
         System.out.println("SD: " + standardDeviation);
 
-        NormalDistribution normalDistribution = new NormalDistribution(mean, standardDeviation);
+        NormalDistribution normalDistribution = new NormalDistribution(mean, standardDeviation * 5);
 
 
         return normalDistribution.cumulativeProbability(xMaxErr);

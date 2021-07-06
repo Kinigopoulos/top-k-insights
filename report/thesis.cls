@@ -4,7 +4,8 @@
 %%
 %% Created by Steve R. Gunn, modified by Sunil Patel: www.sunilpatel.co.uk
 \usepackage[utf8]{inputenc}
-\usepackage[greek]{babel}
+\PassOptionsToPackage{greek, english}{babel}
+\usepackage[greek, english]{babel}
 \usepackage{alphabeta}
 \usepackage[LGR, T1]{fontenc}
 
@@ -27,6 +28,7 @@
 \PassOptionsToClass{a4paper}{\baseclass}
 \ProcessOptions\relax
 \LoadClass{\baseclass}
+
 \newcommand\bhrule{\typeout{------------------------------------------------------------------------------}}
 
 \newcommand\Declaration[1]{
@@ -149,6 +151,7 @@
 \newcommand*{\subject}[1]{\def\subjectname{#1}}
 \newcommand*{\keywords}[1]{\def\keywordnames{#1}}
 \newcommand*{\supervisor}[1]{\def\supname{#1}}
+\newcommand*{\subjectTitle}[1]{\def\subjectTitle{#1}}
 \examiner    {}
 \degree      {}
 \authors     {}
@@ -164,21 +167,17 @@
 \DEPARTMENT  {\texorpdfstring{\href{http://www.csd.auth.gr/el/}
                 {ΤΜΗΜΑ ΠΛΗΡΟΦΟΡΙΚΗΣ}}
                 {DEPARTMENT OR SCHOOL NAME (IN BLOCK CAPITALS)}}
-\group       {\texorpdfstring{\href{https://datalab.csd.auth.gr/}
-                { \textlatin{Datalab (Data and Web Science Lab)}}}
-                {Research Group Name}}
-\GROUP       {\texorpdfstring{\href{https://datalab.csd.auth.gr/}
-                {\textlatin{DATALAB}}}
-                {RESEARCH GROUP NAME (IN BLOCK CAPITALS)}}
+
 \faculty     {\texorpdfstring{\href{http://www.sci.auth.gr/}
                 {Σχολή Θετικών Επιστημών}}
                 {Faculty Name}}
 \FACULTY     {\texorpdfstring{\href{http://www.sci.auth.gr/}
                 {ΣΧΟΛΗ ΘΕΤΙΚΩΝ ΕΠΙΣΤΗΜΩΝ}}
                 {FACULTY NAME (IN BLOCK CAPITALS)}}
-\supervisor  {\texorpdfstring{\href{http://oswinds.csd.auth.gr/old/people-2/faculty/dr-athena-vakali/}
-                {Επιβλέπουσα Καθηγήτρια: Δρ. Αθηνά Βακάλη}}
+\supervisor  {\texorpdfstring{\href{https://www.csd.auth.gr/en/member/anastasios-gounaris/}
+                {Επιβλέπων Καθηγητής: Αναστάσιος Γούναρης}}
                 {Supervising Proffesor's name}}               
+\subjectTitle {Extracting Top-K Insights from Multi-Dimensional Data}
 \addresses   {}
 \subject     {}
 \keywords    {}
@@ -206,7 +205,7 @@
       \vfill
       {\huge \bf \@title \par}
       \vfill
-      {\LARGE της \par}
+      {\LARGE του \par}
       \smallskip
       {\LARGE \authornames \par}
       \vfill
@@ -261,7 +260,7 @@
     \bigskip
     {\normalsize\bf \@title \par}
     \medskip
-    {\normalsize της \authornames \par}
+    {\normalsize του \authornames \par}
     \bigskip
   \end{center}
 }
@@ -275,8 +274,15 @@
 \newcommand\addtotoc[1]{
 \refstepcounter{dummy}
 \addcontentsline{toc}{chapter}{#1}}
+
+\addto\captionsenglish{% Replace "english" with the language you use
+  \renewcommand{\contentsname}%
+    {Περιεχόμενα}%
+}
+\addto\captionsenglish{\renewcommand{\chaptername}{Κεφάλαιο}}
+
 \renewcommand\tableofcontents{
-\btypeout{Table of Contents}
+\btypeout{Περιεχόμενα} 
 \begin{spacing}{1}{
     \setlength{\parskip}{1pt}
     \if@twocolumn
@@ -292,24 +298,7 @@
    \cleardoublepage
 }\end{spacing}
 }
-\renewcommand\listoffigures{
-\btypeout{Λίστα Εικόνων}
-\addtotoc{Λίστα Εικόνων}
-\begin{spacing}{1}{
-    \setlength{\parskip}{1pt}
-    \if@twocolumn
-      \@restonecoltrue\onecolumn
-    \else
-      \@restonecolfalse
-    \fi
-    \chapter*{\listfigurename
-      \@mkboth{\MakeUppercase\listfigurename}
-              {\MakeUppercase\listfigurename}}
-    \@starttoc{lof}
-    \if@restonecol\twocolumn\fi
-    \cleardoublepage
-}\end{spacing}
-}
+
 \renewcommand\listoftables{
 \btypeout{Λίστα Πινάκων}
 \addtotoc{Λίστα Πινάκων}

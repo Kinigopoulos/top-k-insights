@@ -11,6 +11,8 @@ public class Database {
     private final boolean[] ordinal;
     private final int measureIndex;
 
+    public final ArrayList<DataType<?>> superSubspace;
+
     public Database(String[] dimensions, int[] domainDimensions, int measureIndex, boolean[] ordinal) {
         data = new ArrayList<>();
         this.dimensions = dimensions;
@@ -22,6 +24,7 @@ public class Database {
         for (int i = 0; i < dimensions.length; i++) {
             domainValues.add(new HashMap<>());
         }
+        superSubspace = getSubspace();
     }
 
     public void addRow(ArrayList<DataType<?>> row) {

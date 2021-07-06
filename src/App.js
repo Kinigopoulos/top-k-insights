@@ -358,7 +358,7 @@ function App() {
 
                                 return (
                                     <React.Fragment key={key}>
-                                        <div className="insightRow" onClick={() => changeSelectedInsight(key)}>
+                                        <div className="insightRow insightRowObj" onClick={() => changeSelectedInsight(key)}>
                                             <span className="insightCell">
                                                 {insight.insightType}
                                             </span>

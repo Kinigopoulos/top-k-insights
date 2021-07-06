@@ -36,7 +36,7 @@ public class CompositeExtractor {
         ArrayList<CompositeExtractor> newExtractors = new ArrayList<>();
         for(CompositeExtractor compositeExtractor : extractors){
             for(Extractor extractor : Config.extractors){
-                if(level > 1 && !extractor.isMeaningful()){
+                if(level > 1 && !extractor.isMeaningful((Extractor) compositeExtractor.getPair(level - 1).getType())){
                     continue;
                 }
                 for(int dimension : domainDimensions){

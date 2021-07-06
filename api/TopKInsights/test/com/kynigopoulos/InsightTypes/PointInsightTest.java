@@ -28,4 +28,12 @@ public class PointInsightTest {
         System.out.println(significance);
     }
 
+    @Test
+    public void otherTest3(){
+        double[] set = new double[]{28, 25.0, 14.0, 8, 5, 3};
+        PointInsight pointInsight = new PointInsight();
+        double significance = pointInsight.getSignificance(InsightHelper.toMapResultSet(set, false));
+        System.out.println(significance);
+    }
+
 }
