@@ -31,11 +31,6 @@ public class PointInsight implements InsightType {
         ArrayList<Double> sortedValues = new ArrayList<>(F.values());
         sortedValues.sort(Collections.reverseOrder());
 
-        for (Double d : sortedValues) {
-            System.out.print(d + " ");
-        }
-        System.out.println();
-
         final double max = sortedValues.remove(0);
         if(max == sortedValues.get(sortedValues.size() - 1)){
             return .0;
@@ -106,17 +101,12 @@ public class PointInsight implements InsightType {
         final double slope = coefficients[1];
         final double intercept = coefficients[0];
 
-        System.out.println(intercept + "*x^" + slope);
-
         ArrayList<Double> residuals = new ArrayList<>();
         for(int i = 0; i < sortedValues.size(); i++){
             double predictedValue = intercept * FastMath.pow(i + 2, slope);
             residuals.add(predictedValue -sortedValues.get(i));
-            System.out.println((i + 2) + "\t" + predictedValue);
         }
         double xMaxErr = max - intercept;
-        System.out.println("Max Err: " + xMaxErr);
-
 
         double[] doubles = new double[residuals.size()];
         for(int i = 0; i < doubles.length; i++){
@@ -125,14 +115,14 @@ public class PointInsight implements InsightType {
 
         Mean meanObj = new Mean();
         double mean = meanObj.evaluate(doubles, 0, residuals.size());
-        System.out.println("MEAN: " + mean);
 
         StandardDeviation standardDeviationObj = new StandardDeviation();
         double standardDeviation = standardDeviationObj.evaluate(doubles, mean);
-        System.out.println("SD: " + standardDeviation);
+        if (standardDeviation == 0){
+            standardDeviation = Double.MIN_VALUE;
+        }
 
         NormalDistribution normalDistribution = new NormalDistribution(mean, standardDeviation * 5);
-
 
         return normalDistribution.cumulativeProbability(xMaxErr);
     }

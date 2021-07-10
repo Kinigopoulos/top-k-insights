@@ -34,6 +34,9 @@ app.get('/data-sources', (req, res, next) => {
 
 
 app.post('/run', async (req, res, next) => {
+
+    console.time("execution");
+
     const {options, ports} = req.body;
     const {datasource, columns, ordinal, measureColumn, k, t, aggregator, extractors, insightTypes} = options;
 
@@ -64,8 +67,6 @@ app.post('/run', async (req, res, next) => {
             return obj['event']
         });
 
-        console.log("Rows: " + result.length);
-
         const columnTypesResponse = await axios.post(`${ports.router}/druid/v2/sql`, {
             "query": `SELECT COLUMN_NAME, DATA_TYPE FROM INFORMATION_SCHEMA.COLUMNS\n
 WHERE TABLE_SCHEMA = 'druid' AND TABLE_NAME = '${datasource}'`
@@ -88,6 +89,7 @@ WHERE TABLE_SCHEMA = 'druid' AND TABLE_NAME = '${datasource}'`
                 }
                 console.log(JSON.parse(result));
                 res.end(result);
+                console.timeEnd("execution");
             });
     } catch (err) {
         console.log(err);

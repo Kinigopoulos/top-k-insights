@@ -28,11 +28,6 @@ public class ShapeInsight implements InsightType {
             double slope = regression.getSlope();
             double prob = distribution.cumulativeProbability(Math.abs(slope));
 
-            System.out.println(slope);
-            System.out.println(regression.getRSquare());
-            System.out.println(prob);
-
-            System.out.println("Shape p-val: " + (prob * regression.getRSquare()));
             return prob * regression.getRSquare();
         }
         return -.01;

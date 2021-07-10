@@ -136,7 +136,7 @@ public class TopKInsights {
 
         String sub = getSubspaceString(subspace);
         System.out.println("SG(" + sub + ", " + database.getDimensionName(dimension) + ") \t\t" + extractor.toString(database) +
-                 " " + isValid(subspace, dimension, extractor));
+                 ", is valid: " + isValid(subspace, dimension, extractor));
 
         if(isValid(subspace, dimension, extractor)){
             double impact = getImpact(subspace) / getImpact(Database.getSubspaceCopy(database.superSubspace));
@@ -149,7 +149,7 @@ public class TopKInsights {
 
             Map<DataType<?>, Double> F = ExtractF(subspace, dimension, extractor);
             if(F.size() == 0){
-                System.out.println("All values were null");
+                System.out.println("All values were null. Skipping this set...");
                 return;
             }
 
@@ -164,19 +164,14 @@ public class TopKInsights {
                     assert priorityQueue.peek() != null;
                     if(S > priorityQueue.peek().getValue()){
                         priorityQueue.poll();
+                        System.out.println("Found new insight with score: " + S);
                         priorityQueue.add(new Insight(subspace, dimension, extractor, S, insightType, F));
                     }
                 }else{
+                    System.out.println("Found new insight with score: " + S);
                     priorityQueue.add(new Insight(subspace, dimension, extractor, S, insightType, F));
                 }
             }
-
-            for (Map.Entry<DataType<?>, Double> d : F.entrySet()) {
-                System.out.print(d.getKey().getValue() + ": " + d.getValue() + ", ");
-            }
-
-            System.out.println("Importance value: " + impact);
-            System.out.println();
         }
 
     }

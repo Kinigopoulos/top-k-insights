@@ -13,13 +13,13 @@
 
 
 # report
-/report/*
-!/report/thesis.tex
-!/report/thesis.pdf
-!/report/thesis.cls
-!/report/Figures/
-!/report/Chapters/
-!/report/Appendices/
+# /report/*
+# !/report/thesis.tex
+# !/report/thesis.pdf
+# !/report/thesis.cls
+# !/report/Figures/
+# !/report/Chapters/
+# !/report/Appendices/
 
 # testing
 /coverage
