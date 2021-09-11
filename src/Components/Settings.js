@@ -1,18 +1,30 @@
 import React, {useState} from "react";
 import "./WindowComponent.css";
 
-function Settings({ports, setPorts}) {
+function Settings({ports, setPorts, credentials, setCredentials}) {
 
-    const [settings, setSettings] = useState(ports);
+    const [settings, setSettings] = useState(ports || {});
+    const [localCredentials, setLocalCredentials] = useState(credentials || {});
 
     function setPort(e) {
         e.preventDefault();
-        setSettings({...settings, [e.target.name]: e.target.value});
+        const newSettings = {...settings, [e.target.name]: e.target.value};
+        setSettings(newSettings);
     }
 
-    function apply(e){
+    function setCredential(e) {
+        e.preventDefault();
+        const newSettings = {...localCredentials, [e.target.name]: e.target.value};
+        setLocalCredentials(newSettings);
+    }
+
+    function apply(e) {
         e.preventDefault();
         setPorts(settings);
+        setCredentials(localCredentials);
+        localStorage.setItem("ports", JSON.stringify(settings));
+        localStorage.setItem("credentials", JSON.stringify(localCredentials));
+        window.location.reload();
     }
 
     return (
@@ -24,6 +36,19 @@ function Settings({ports, setPorts}) {
                         <div key={setting}>
                             <span>{setting.toString()}</span>
                             <input name={setting} type="text" onChange={setPort} value={value}/>
+
+                        </div>
+                    )
+                })
+            }
+
+            <h2>Set Up Your Credentials</h2>
+            {
+                Object.entries(localCredentials).map(([setting, value]) => {
+                    return (
+                        <div key={setting}>
+                            <span>{setting.toString()}</span>
+                            <input name={setting} type={setting === "password" ? "password" : "text"} onChange={setCredential} value={value}/>
 
                         </div>
                     )

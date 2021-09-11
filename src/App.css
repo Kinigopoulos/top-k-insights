@@ -167,6 +167,22 @@ button:hover{
     background-color: var(--selection-button-color);
 }
 
+.filterContainer{
+    display: flex;
+    width: 100%;
+    justify-content: center;
+}
+
+.filterType{
+    width: 7.5rem;
+}
+
+.filterRemove{
+    font-size: small;
+    cursor: pointer;
+    color: #f30522;
+}
+
 .resultsContainer{
     background-color: var(--secondary-bg-color);
     padding: 1rem;

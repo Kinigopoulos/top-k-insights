@@ -1,8 +1,9 @@
 package com.kynigopoulos;
 
-import com.kynigopoulos.Aggregators.Aggregator;
 import com.kynigopoulos.Extractors.Extractor;
 import com.kynigopoulos.InsightTypes.InsightType;
+import com.kynigopoulos.Strategy.LocalStrategy;
+import com.kynigopoulos.Strategy.Strategy;
 
 import java.util.*;
 
@@ -15,6 +16,8 @@ public class TopKInsights {
     private PriorityQueue<Insight> priorityQueue;
     private HashMap<ArrayList<DataType<?>>, Double> impactCube;
     private HashMap<ArrayList<DataType<?>>, Double> dataCube;
+    private String[] dimensionNames;
+    private Strategy strategy;
 
     public TopKInsights(Database database, int k, int t){
         this.database = database;
@@ -43,13 +46,23 @@ public class TopKInsights {
             return new ArrayList<>();
         }
 
-        int[] domainDimensions = database.getDomainDimensions();
-
         //Initializing heap with k capacity
         priorityQueue = new PriorityQueue<>(k);
 
         dataCube = new HashMap<>();
         impactCube = new HashMap<>();
+
+
+        int[] domainDimensions = database.getDomainDimensions();
+        this.dimensionNames = database.getDimensions();
+
+
+
+        strategy = new LocalStrategy(database);
+
+        //Enable druidStrategy
+        //strategy = new DruidStrategy(database, dimensionNames, database.getDimensionName(domainDimensions.length));
+        //impactCube.put(database.superSubspace, druidRequest.aggregationRequest(druidRequest.noFilters().toString()));
 
         //Enumerate all possible Extractors
         ArrayList<CompositeExtractor> compositeExtractors =
@@ -123,6 +136,7 @@ public class TopKInsights {
             return impactCube.get(subspace);
         }
         double impact = database.getSubspaceSum(subspace);
+        //double impact = druidRequest.aggregationRequest(druidRequest.setWithFilters(dimensionNames, subspace).toString());
         impactCube.put(subspace, impact);
         return impact;
     }
@@ -244,7 +258,8 @@ public class TopKInsights {
         if(dataCube.containsKey(subspace)){
             return dataCube.get(subspace);
         }
-        double M = ((Aggregator)extractor.getPair(0).getType()).getOutput(database, subspace, dimension);
+        double M = strategy.getAggregationResult(extractor, subspace, dimension);
+
         dataCube.put(subspace, M);
         return M;
     }

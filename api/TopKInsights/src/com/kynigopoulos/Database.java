@@ -10,15 +10,17 @@ public class Database {
     private final String[] dimensions;
     private final boolean[] ordinal;
     private final int measureIndex;
+    private final String name;
 
     public final ArrayList<DataType<?>> superSubspace;
 
-    public Database(String[] dimensions, int[] domainDimensions, int measureIndex, boolean[] ordinal) {
+    public Database(String[] dimensions, int[] domainDimensions, int measureIndex, boolean[] ordinal, String name) {
         data = new ArrayList<>();
         this.dimensions = dimensions;
         this.domainDimensions = domainDimensions;
         this.measureIndex = measureIndex;
         this.ordinal = ordinal;
+        this.name = name;
 
         domainValues = new ArrayList<>(dimensions.length);
         for (int i = 0; i < dimensions.length; i++) {
@@ -59,6 +61,20 @@ public class Database {
     }
 
     /**
+     * @return the name of the database.
+     */
+    public String getName(){
+        return this.name;
+    }
+
+    /**
+     *
+     */
+    public ArrayList<HashMap<Object, DataType<?>>> getDomainValues(){
+        return domainValues;
+    }
+
+    /**
      * @param initial initial Subspace
      * @return cloned subspace object
      */
@@ -69,6 +85,10 @@ public class Database {
 
     public int[] getDomainDimensions() {
         return domainDimensions;
+    }
+
+    public String[] getDimensions(){
+        return dimensions;
     }
 
     public Number getMeasureValue(int index) {
@@ -92,14 +112,6 @@ public class Database {
             }
         }
 
-        return sum;
-    }
-
-    public Double getMeasureSum() {
-        double sum = 0;
-        for (ArrayList<DataType<?>> row : data) {
-            sum += ((Number) row.get(measureIndex).getValue()).doubleValue();
-        }
         return sum;
     }
 
@@ -127,19 +139,6 @@ public class Database {
      */
     public int size() {
         return data.size();
-    }
-
-    /**
-     * Prints the database to console
-     */
-    public void printTable() {
-        for (ArrayList<DataType<?>> tuple : data) {
-            for (DataType<?> type : tuple) {
-                System.out.print(type.getValue());
-                System.out.print(" ");
-            }
-            System.out.println();
-        }
     }
 
 }

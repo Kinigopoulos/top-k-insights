@@ -18,10 +18,11 @@ public class Main {
             Integer t,
             String aggregator,
             String extractors,
-            String insightTypes
+            String insightTypes,
+            String datasource
     ) {
         try {
-            Database database = JSONController.toDatabase(data, columns, fromString(ordinalColumns), measureColumnName);
+            Database database = JSONController.toDatabase(data, columns, fromString(ordinalColumns), measureColumnName, datasource);
             System.out.println("Rows loaded: " + database.size());
 
             Config.setAggregatorByString(aggregator);

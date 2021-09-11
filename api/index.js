@@ -22,23 +22,71 @@ function arrayToString(array) {
 }
 
 app.get('/data-sources', (req, res, next) => {
-    const coordinator = req.query.coordinator;
-    axios.get(`${coordinator}/druid/coordinator/v1/datasources?full`)
+    const broker = req.query.broker;
+    const {username = "", password = ""} = req.headers;
+    axios.get(`${broker}/druid/v2/datasources`,
+        {auth: {username, password}})
         .then(resAxios => {
             res.send(resAxios.data);
         })
         .catch(errAxios => {
-            next(errAxios.response);
-        })
-})
+            console.log(errAxios.message);
+            next(errAxios);
+        });
+});
 
+app.get('/dimensions', (req, res, next) => {
+    const {broker, datasource} = req.query;
+    const {username = "", password = ""} = req.headers;
+    axios.post(`${broker}/druid/v2/`, {
+            "queryType": "segmentMetadata",
+            "dataSource": datasource
+        },
+        {auth: {username, password}})
+        .then(resAxios => {
+            const data = resAxios.data;
+            const columns = [];
+            for(let entry of data){
+                const entryColumns = entry.columns;
+                Object.keys(entryColumns).forEach((key) => {
+                    if(!columns.includes(key)){
+                        columns.push(key);
+                    }
+                })
+            }
+            res.send(columns);
+        })
+        .catch(errAxios => {
+            console.log(errAxios.message);
+            next(errAxios);
+        });
+});
+
+function constructFilterJSON(filters){
+    const fields = [];
+
+    for(const filter of filters){
+        if(filter.dimension && filter.type && filter.value){
+            if(filter.type === "equals"){
+                fields.push({type: "selector", dimension: filter.dimension, value: filter.value});
+            } else if(filter.type === "not equals"){
+                fields.push({type: "not", value: {type: "selector", dimension: filter.dimension, value: filter.value}});
+            }
+        }
+    }
+
+    //The filter JSON, if there are to filters return undefined
+    return fields.length === 0 ? undefined : ({type: "and", fields: fields});
+}
 
 app.post('/run', async (req, res, next) => {
 
     console.time("execution");
 
     const {options, ports} = req.body;
-    const {datasource, columns, ordinal, measureColumn, k, t, aggregator, extractors, insightTypes} = options;
+    const {username = "", password = ""} = req.headers;
+    const {datasource, columns, ordinal, measureColumn, k, t, aggregator, extractors, insightTypes, filters} = options;
+
 
     let queryColumns = columns;
     let ordinalColumns = ordinal;
@@ -54,23 +102,32 @@ app.post('/run', async (req, res, next) => {
     queryColumns.push(measureColumn);
 
 
+    const groupByQuery = {
+        queryType: "groupBy",
+        dataSource: datasource,
+        dimensions: queryColumns,
+        granularity: "all",
+        intervals: "0/10000"
+    };
+    const filtersJSON = constructFilterJSON(filters);
+    console.log(filtersJSON);
+    if(filtersJSON){
+        groupByQuery.filter = filtersJSON;
+    }
+
     try {
-        const axiosResponse = await axios.post(`${ports.broker}/druid/v2`, {
-            queryType: "groupBy",
-            dataSource: datasource,
-            dimensions: queryColumns,
-            granularity: "all",
-            intervals: "0/10000"
-        });
+        const axiosResponse = await axios.post(`${ports.broker}/druid/v2`, groupByQuery, {auth: {username, password}});
 
         const result = axiosResponse.data.map(obj => {
             return obj['event']
         });
 
+        console.log(result);
+
         const columnTypesResponse = await axios.post(`${ports.router}/druid/v2/sql`, {
             "query": `SELECT COLUMN_NAME, DATA_TYPE FROM INFORMATION_SCHEMA.COLUMNS\n
 WHERE TABLE_SCHEMA = 'druid' AND TABLE_NAME = '${datasource}'`
-        });
+        }, {auth: {username, password}});
 
         const columns = columnTypesResponse.data.filter(column => {
             return queryColumns.includes(column.COLUMN_NAME);
@@ -80,7 +137,7 @@ WHERE TABLE_SCHEMA = 'druid' AND TABLE_NAME = '${datasource}'`
 
         java.callStaticMethod("com.kynigopoulos.Main", "getResults",
             JSON.stringify(result), JSON.stringify(columns), arrayToString(ordinalColumns), measureColumn,
-            k, t, aggregator, arrayToString(extractors), arrayToString(insightTypes),
+            k, t, aggregator, arrayToString(extractors), arrayToString(insightTypes), datasource,
             function (err, result) {
                 if (err || result === "") {
                     console.log(err);
@@ -96,7 +153,7 @@ WHERE TABLE_SCHEMA = 'druid' AND TABLE_NAME = '${datasource}'`
         next(err.response);
     }
 
-})
+});
 
 
 app.listen(port, () => {

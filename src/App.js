@@ -9,11 +9,23 @@ function App() {
 
     const [druidRunning, setDruidRunning] = useState(true);
     const [openDialog, setOpenDialog] = useState(0);
-    const [ports, setPorts] = useState({
+    const [ports, setPorts] = useState(JSON.parse(localStorage.getItem("ports")) || {
         Broker: "http://localhost:8082",
         Coordinator: "http://localhost:8081",
         Router: "http://localhost:8888"
     });
+    const [credentials, setCredentials] = useState(JSON.parse(localStorage.getItem("credentials")) || {
+        username: "",
+        password: ""
+    });
+    const getHeadersWithCredentials = () => {
+        const headers = {};
+        if (credentials.username && credentials.password) {
+            headers.username = credentials.username;
+            headers.password = credentials.password;
+        }
+        return headers;
+    }
 
     const aggregators = ["Sum", "Count", "Mean"];
     const defaultExtractors = [
@@ -26,6 +38,10 @@ function App() {
         "Point",
         "Shape"
     ];
+    const filterTypes = [
+        "equals",
+        "not equals"
+    ]
 
     function MainBody() {
         const [dataSources, setDataSources] = useState([]);
@@ -38,46 +54,44 @@ function App() {
             k: 1,
             t: 1,
             aggregator: aggregators[0],
-            extractors: [ ...defaultExtractors ],
-            insightTypes: [ ...defaultInsightTypes ]
+            extractors: [...defaultExtractors],
+            insightTypes: [...defaultInsightTypes],
+            filters: []
         });
         const [isExecuting, setIsExecuting] = useState(false);
         const [dimensions, setDimensions] = useState([]);
         const [insights, setInsights] = useState([]);
         const [selectedInsight, setSelectedInsight] = useState(-1);
 
-        console.log(options.insightTypes)
-
         useEffect(() => {
-            axios.get("/data-sources", {params: {coordinator: ports.Coordinator}})
+            axios.get("/data-sources", {params: {broker: ports.Broker}, headers: getHeadersWithCredentials()})
                 .then(res => {
                     setDataSources(res.data);
                 }).catch(err => {
                 setDruidRunning(false);
                 console.log(err);
-            })
+            });
         }, []);
 
         useEffect(() => {
             const name = options.datasource;
-            let columns = [];
-            if (name !== '') {
-                dataSources.forEach(dataSource => {
-                    if (dataSource.name !== name) return;
-                    dataSource.segments.forEach(segment => {
-                        const dimensions = segment['dimensions'].split(',');
-                        dimensions.forEach(dimension => {
-                            if(!columns.includes(dimension)){
-                                columns.push(dimension);
-                            }
-                        })
-                    })
+            axios.get("/dimensions", {
+                params: {broker: ports.Broker, datasource: name},
+                headers: getHeadersWithCredentials()
+            })
+                .then(res => {
+                    if (Array.isArray(res.data)) {
+                        setColumns(res.data);
+                    } else {
+                        setColumns([]);
+                    }
+                    setOptions(options => {
+                        return {...options, columns: [], ordinal: [], measureColumn: ''}
+                    });
                 })
-            }
-            setColumns(columns);
-            setOptions(options => {
-                return {...options, columns: [], ordinal: [], measureColumn: ''}
-            });
+                .catch(err => {
+                    console.log(err);
+                });
         }, [options.datasource, dataSources])
 
         function setOption(e) {
@@ -97,28 +111,56 @@ function App() {
                 newColumns.push(e.target.value);
             } else {
                 const index = newColumns.indexOf(e.target.value);
-                if (index > -1){
+                if (index > -1) {
                     newColumns.splice(index, 1);
                 }
                 const ordinalIndex = newOrdinal.indexOf(e.target.value);
-                if(ordinalIndex > -1) {
+                if (ordinalIndex > -1) {
                     newOrdinal.splice(ordinalIndex, 1);
                 }
             }
             setOptions({...options, columns: newColumns, ordinal: newOrdinal});
         }
 
-        function toggleOrdinal(e){
+        function toggleOrdinal(e) {
             let newOrdinal = options[e.target.name];
             if (e.target.checked) {
                 newOrdinal.push(e.target.value);
             } else {
                 const ordinalIndex = newOrdinal.indexOf(e.target.value);
-                if(ordinalIndex > -1) {
+                if (ordinalIndex > -1) {
                     newOrdinal.splice(ordinalIndex, 1);
                 }
             }
             setOptions({...options, [e.target.name]: newOrdinal});
+        }
+
+
+        console.log(options);
+
+        function addFilter(e) {
+            e.preventDefault();
+            setOptions({...options, filters: [...options.filters, {type: "", dimension: "", value: ""}]})
+        }
+
+        function setFilter(e) {
+            e.preventDefault();
+
+            const name = e.target.name.split('-')[0];
+            const id = Number.parseInt(e.target.name.split('-')[1]);
+
+            const newFilters = [...options.filters];
+            newFilters[id][name] = e.target.value;
+            setOptions({...options, filters: newFilters});
+        }
+
+        function removeFilter(e){
+            e.preventDefault();
+            const id = e.target.id;
+            console.log(id);
+            const newFilters = [...options.filters];
+            newFilters.splice(id, 1);
+            setOptions({...options, filters: newFilters});
         }
 
         const ExecuteQuery = () => {
@@ -137,15 +179,18 @@ function App() {
             } else if (options.t <= 0) {
                 window.alert("τ must be a positive number");
                 return;
-            } else if (options.extractors.length === 0){
+            } else if (options.extractors.length === 0) {
                 window.alert("Extractors' size cannot be 0");
                 return;
-            } else if (options.insightTypes.length === 0){
+            } else if (options.insightTypes.length === 0) {
                 window.alert("Insight types' size cannot be 0");
                 return;
             }
             setIsExecuting(true);
-            axios.post("/run", {options: options, ports: {broker: ports.Broker, router: ports.Router}})
+            axios.post("/run", {
+                options: options,
+                ports: {broker: ports.Broker, router: ports.Router}
+            }, {headers: getHeadersWithCredentials()})
                 .then(res => {
                     console.log(res.data);
                     setIsExecuting(false);
@@ -158,11 +203,11 @@ function App() {
                     });
                     setInsights(res.data);
                 }).catch(err => {
-                    console.log(err.response.data.message);
-                    window.alert(err.response.data.message);
-                    setIsExecuting(false);
-                    setInsights([]);
-                })
+                console.log(err.response.data.message);
+                window.alert(err.response.data.message);
+                setIsExecuting(false);
+                setInsights([]);
+            })
         }
 
         const extractorToString = data => {
@@ -210,8 +255,8 @@ function App() {
                         <option value="">--- Select Source ---</option>
                         {dataSources.map((dataSource, key) => {
                             return (
-                                <option value={dataSource.name} key={key}>
-                                    {dataSource.name}
+                                <option value={dataSource} key={key}>
+                                    {dataSource}
                                 </option>
                             )
                         })}
@@ -331,6 +376,48 @@ function App() {
                     </form>
                     <br/>
 
+                    <span>Filters</span>
+                    <form>
+                        {
+                            options.filters.map((filter, key) => {
+                                return (
+                                    <React.Fragment key={key}>
+                                        <span>Filter No. {key + 1} <span className="filterRemove" onClick={removeFilter} id={key}>Remove</span></span>
+                                        <div className="filterContainer">
+                                            <select onChange={setFilter} name={`dimension-${key}`}
+                                                    value={filter.dimension}>
+                                                <option value={''}>--- Select Dimension ---</option>
+                                                {columns.map((column, key) => {
+                                                    return (
+                                                        <option value={column} key={key}>
+                                                            {column}
+                                                        </option>
+                                                    )
+                                                })}
+                                            </select>
+
+                                            <select onChange={setFilter} className="filterType" name={`type-${key}`} value={filter.type}>
+                                                <option value={''}>--- Select Type ---</option>
+                                                {filterTypes.map((type, key) => {
+                                                    return (
+                                                        <option value={type} key={key}>
+                                                            {type}
+                                                        </option>
+                                                    )
+                                                })}
+                                            </select>
+                                        </div>
+                                        <input className="" name={`value-${key}`} onChange={setFilter}
+                                               value={filter.value}/>
+
+                                    </React.Fragment>
+                                )
+                            })
+                        }
+                        <button onClick={addFilter}>+</button>
+                    </form>
+                    <br/>
+
                     <button onClick={ExecuteQuery}>Execute</button>
                 </div>
 
@@ -358,7 +445,8 @@ function App() {
 
                                 return (
                                     <React.Fragment key={key}>
-                                        <div className="insightRow insightRowObj" onClick={() => changeSelectedInsight(key)}>
+                                        <div className="insightRow insightRowObj"
+                                             onClick={() => changeSelectedInsight(key)}>
                                             <span className="insightCell">
                                                 {insight.insightType}
                                             </span>
@@ -431,7 +519,9 @@ function App() {
             </header>
 
             {openDialog === 1 && <WindowComponent children={<Help/>}/>}
-            {openDialog === 2 && <WindowComponent children={<Settings ports={ports} setPorts={setPorts}/>}/>}
+            {openDialog === 2 && <WindowComponent
+                children={<Settings ports={ports} setPorts={setPorts} credentials={credentials}
+                                    setCredentials={setCredentials}/>}/>}
 
             <div className={`mainBody ${openDialog !== 0 && "disabledMainBody"}`}>
                 {druidRunning ? <MainBody/> : <ErrorMessage/>}

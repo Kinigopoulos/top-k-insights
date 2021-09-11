@@ -3,6 +3,7 @@ package com.kynigopoulos;
 import org.junit.jupiter.api.Test;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
@@ -22,7 +23,7 @@ public class DatabaseTest {
         int[] domainDimensions = new int[]{0, 1};
         int measureDimension = 2;
         boolean[] ordinal = new boolean[]{true, false, true};
-        Database database = new Database(new String[]{"Year", "Brand", "Sales"}, domainDimensions, measureDimension, ordinal);
+        Database database = new Database(new String[]{"Year", "Brand", "Sales"}, domainDimensions, measureDimension, ordinal, "sales");
 
         database.addRow(makeRow(2010, 'F', 13));
         database.addRow(makeRow(2011, 'F', 10));
@@ -64,7 +65,7 @@ public class DatabaseTest {
         int[] domainDimensions = new int[]{0, 1};
         int measureDimension = 2;
         boolean[] ordinal = new boolean[]{false, true, true};
-        Database database = new Database(new String[]{"Brand", "Year", "Sales"}, domainDimensions, measureDimension, ordinal);
+        Database database = new Database(new String[]{"Brand", "Year", "Sales"}, domainDimensions, measureDimension, ordinal, "sales");
 
         database.addRow(makeRow2(2010, 'F', 13));
         database.addRow(makeRow2(2011, 'F', 10));
@@ -96,7 +97,7 @@ public class DatabaseTest {
         int[] domainDimensions = new int[]{0, 1};
         int measureDimension = 2;
         boolean[] ordinal = new boolean[]{false, true, true};
-        Database database = new Database(new String[]{"Brand", "Year", "Sales"}, domainDimensions, measureDimension, ordinal);
+        Database database = new Database(new String[]{"Brand", "Year", "Sales"}, domainDimensions, measureDimension, ordinal, "sales");
 
         database.addRow(makeRow2(2010, 'B', 20));
         database.addRow(makeRow2(2011, 'B', 18));
@@ -129,6 +130,11 @@ public class DatabaseTest {
         Database database = simpleDatabase();
         assertEquals(true, database.isOrdinal(0));
         assertEquals(false, database.isOrdinal(1));
+
+        ArrayList<HashMap<Object, DataType<?>>> domainValues = database.getDomainValues();
+        for(HashMap<Object, DataType<?>> domain : domainValues) {
+            domain.forEach((k, v) -> System.out.println(k + " " + v));
+        }
     }
 
 

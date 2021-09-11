@@ -67,6 +67,10 @@ public class CompositeExtractor {
         return makeCompositeExtractor(baseExtractor, database,1, domainDimensions);
     }
 
+    public static Object getAggregator(CompositeExtractor extractor){
+        return extractor.getPair(0).getType();
+    }
+
 
     public String toString(Database database) {
         String s = "<";

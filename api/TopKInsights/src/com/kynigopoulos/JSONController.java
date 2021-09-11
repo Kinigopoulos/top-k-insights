@@ -63,7 +63,7 @@ public class JSONController {
     }
 
 
-    public static Database toDatabase(String data, String columns, String[] ordinal, String measureColumnName) {
+    public static Database toDatabase(String data, String columns, String[] ordinal, String measureColumnName, String datasource) {
         JSONArray jsonArray = new JSONArray(data);
         JSONArray columnsArray = new JSONArray(columns);
 
@@ -109,8 +109,7 @@ public class JSONController {
             }
         }
 
-
-        Database database = new Database(dimensionNames, domainDimensions, measureDimension, ordinalDimensions);
+        Database database = new Database(dimensionNames, domainDimensions, measureDimension, ordinalDimensions, datasource);
 
         for (Object object : jsonArray) {
             JSONObject jsonRow = (JSONObject) object;
@@ -120,14 +119,29 @@ public class JSONController {
                 dataTypes type = dimensionTypes.get(dimensionName).getType();
 
                 if(type == dataTypes.String){
+                    if(jsonRow.get(dimensionName) == null){
+                        row.add(new DataType<>(""));
+                    }
                     row.add(new DataType<>(jsonRow.getString(dimensionName)));
                 } else if(type == dataTypes.Long){
+                    if(jsonRow.get(dimensionName) == null){
+                        row.add(new DataType<>(0));
+                    }
                     row.add(new DataType<>(jsonRow.getLong(dimensionName)));
                 } else if(type == dataTypes.Boolean){
+                    if(jsonRow.get(dimensionName) == null){
+                        row.add(new DataType<>(false));
+                    }
                     row.add(new DataType<>(jsonRow.getBoolean(dimensionName)));
                 } else if(type == dataTypes.Double){
+                    if(jsonRow.get(dimensionName) == null){
+                        row.add(new DataType<>(.0));
+                    }
                     row.add(new DataType<>(jsonRow.getDouble(dimensionName)));
                 } else if(type == dataTypes.Float){
+                    if(jsonRow.get(dimensionName) == null){
+                        row.add(new DataType<>(.0));
+                    }
                     row.add(new DataType<>(jsonRow.getFloat(dimensionName)));
                 } else {
                     System.out.println("Unsupported type was not added...");
