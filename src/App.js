@@ -8,6 +8,7 @@ import Settings from "./Components/Settings";
 function App() {
 
     const [druidRunning, setDruidRunning] = useState(true);
+    const [bypassDruid, setBypassDruid] = useState(false);
     const [openDialog, setOpenDialog] = useState(0);
     const [ports, setPorts] = useState(JSON.parse(localStorage.getItem("ports")) || {
         Broker: "http://localhost:8082",
@@ -61,7 +62,9 @@ function App() {
         const [isExecuting, setIsExecuting] = useState(false);
         const [dimensions, setDimensions] = useState([]);
         const [insights, setInsights] = useState([]);
+        const [numberOfRows, setNumberOfRows] = useState(-1);
         const [selectedInsight, setSelectedInsight] = useState(-1);
+        const [loadedInsights, setLoadedInsights] = useState(false);
 
         useEffect(() => {
             axios.get("/data-sources", {params: {broker: ports.Broker}, headers: getHeadersWithCredentials()})
@@ -74,6 +77,7 @@ function App() {
         }, []);
 
         useEffect(() => {
+            if (loadedInsights) return;
             const name = options.datasource;
             axios.get("/dimensions", {
                 params: {broker: ports.Broker, datasource: name},
@@ -92,10 +96,13 @@ function App() {
                 .catch(err => {
                     console.log(err);
                 });
-        }, [options.datasource, dataSources])
+        }, [options.datasource, dataSources, loadedInsights])
 
         function setOption(e) {
             e.preventDefault();
+            if (e.target.name === 'datasource' && loadedInsights) {
+                setLoadedInsights(false);
+            }
             setOptions({...options, [e.target.name]: e.target.value});
         }
 
@@ -135,9 +142,6 @@ function App() {
             setOptions({...options, [e.target.name]: newOrdinal});
         }
 
-
-        console.log(options);
-
         function addFilter(e) {
             e.preventDefault();
             setOptions({...options, filters: [...options.filters, {type: "", dimension: "", value: ""}]})
@@ -154,7 +158,7 @@ function App() {
             setOptions({...options, filters: newFilters});
         }
 
-        function removeFilter(e){
+        function removeFilter(e) {
             e.preventDefault();
             const id = e.target.id;
             console.log(id);
@@ -201,13 +205,15 @@ function App() {
                         columns.push(options.measureColumn);
                         return columns;
                     });
-                    setInsights(res.data);
-                }).catch(err => {
-                console.log(err.response.data.message);
-                window.alert(err.response.data.message);
-                setIsExecuting(false);
-                setInsights([]);
-            })
+                    setInsights(res.data.result);
+                    setNumberOfRows(res.data.rows);
+                })
+                .catch(err => {
+                    console.log(err.response.data.message);
+                    window.alert(err.response.data.message);
+                    setIsExecuting(false);
+                    setInsights([]);
+                });
         }
 
         const extractorToString = data => {
@@ -246,6 +252,42 @@ function App() {
                 setSelectedInsight(key);
             }
         }
+
+        const downloadFile = async () => {
+            const myData = {
+                columns: columns,
+                options: options,
+                rows: numberOfRows,
+                dimensions: dimensions,
+                insights: insights
+            };
+            const fileName = `${options.datasource}_insights_${Date.now()}`;
+
+            const json = JSON.stringify(myData);
+            const blob = new Blob([json], {type: 'application/json'});
+            const href = URL.createObjectURL(blob);
+            const link = document.createElement('a');
+            link.href = href;
+            link.download = fileName + ".json";
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        };
+
+        const showFile = async (e) => {
+            e.preventDefault()
+            const reader = new FileReader()
+            reader.onload = async (e) => {
+                const {columns, options, rows, dimensions, insights} = JSON.parse((e.target.result).toString());
+                setLoadedInsights(true);
+                setColumns(columns);
+                setOptions(options);
+                setNumberOfRows(rows);
+                setDimensions(dimensions);
+                setInsights(insights);
+            };
+            reader.readAsText(e.target.files[0])
+        };
 
         return (
             <div className="mainBody">
@@ -382,7 +424,8 @@ function App() {
                             options.filters.map((filter, key) => {
                                 return (
                                     <React.Fragment key={key}>
-                                        <span>Filter No. {key + 1} <span className="filterRemove" onClick={removeFilter} id={key}>Remove</span></span>
+                                        <span>Filter No. {key + 1} <span className="filterRemove" onClick={removeFilter}
+                                                                         id={key}>Remove</span></span>
                                         <div className="filterContainer">
                                             <select onChange={setFilter} name={`dimension-${key}`}
                                                     value={filter.dimension}>
@@ -396,7 +439,8 @@ function App() {
                                                 })}
                                             </select>
 
-                                            <select onChange={setFilter} className="filterType" name={`type-${key}`} value={filter.type}>
+                                            <select onChange={setFilter} className="filterType" name={`type-${key}`}
+                                                    value={filter.type}>
                                                 <option value={''}>--- Select Type ---</option>
                                                 {filterTypes.map((type, key) => {
                                                     return (
@@ -423,6 +467,30 @@ function App() {
 
                 <div className="resultsContainer">
                     {isExecuting && <h1>Loading</h1>}
+                    <div style={{
+                        display: "flex", justifyContent: "space-between",
+                        alignItems: "center", marginBottom: "0.4rem"
+                    }}>
+                        {
+                            numberOfRows > 0 ?
+                                <>
+                                    <h3 style={{margin: 0}}>Number of documents/rows: {numberOfRows}</h3>
+                                    <button style={{margin: 0}} onClick={downloadFile}>
+                                        <i className="fa fa-download"/> Save insights
+                                    </button>
+                                </>
+                                :
+                                <>
+                                    <div/>
+                                    <button style={{margin: 0}}
+                                            onClick={() => document.getElementById('fileOpen').click()}>
+                                        <i className="fa fa-upload"/> Load insights
+                                    </button>
+
+                                    <input type="file" id="fileOpen" onChange={showFile} style={{display: "none"}}/>
+                                </>
+                        }
+                    </div>
                     {insights.length > 0 &&
                     <div>
                         <div className="insightRow" style={{marginBottom: "0.2rem"}}>
@@ -482,12 +550,13 @@ function App() {
         );
     }
 
-    function ErrorMessage() {
+    function ErrorMessage({setBypassDruid}) {
         return (
             <div className="errorMessage">
                 <span className="errorMessageText">
                     Make sure that your Druid server is running and refresh the page!
                 </span>
+                <button className="errorMessageButton" onClick={() => setBypassDruid(true)}>Run saved insights</button>
             </div>
         );
     }
@@ -524,7 +593,7 @@ function App() {
                                     setCredentials={setCredentials}/>}/>}
 
             <div className={`mainBody ${openDialog !== 0 && "disabledMainBody"}`}>
-                {druidRunning ? <MainBody/> : <ErrorMessage/>}
+                {(druidRunning || bypassDruid) ? <MainBody/> : <ErrorMessage setBypassDruid={setBypassDruid}/>}
             </div>
         </div>
     );

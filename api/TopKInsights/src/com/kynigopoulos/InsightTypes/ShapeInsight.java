@@ -16,19 +16,23 @@ public class ShapeInsight implements InsightType {
 
     @Override
     public double getSignificance(Map<DataType<?>, Double> F) {
-        if(F instanceof TreeMap){
-            if(((TreeMap<DataType<?>, Double>) F).firstEntry().getValue().equals(((TreeMap<DataType<?>, Double>) F).lastEntry().getValue())){
-                return .0;
-            }
+        try {
+            if (F instanceof TreeMap) {
+                if (((TreeMap<DataType<?>, Double>) F).firstEntry().getValue().equals(((TreeMap<DataType<?>, Double>) F).lastEntry().getValue())) {
+                    return .0;
+                }
 
-            SimpleRegression regression = new SimpleRegression();
-            for (Map.Entry<DataType<?>, Double> entry : F.entrySet()) {
-                regression.addData(((Number) entry.getKey().getValue()).doubleValue(), entry.getValue());
-            }
-            double slope = regression.getSlope();
-            double prob = distribution.cumulativeProbability(Math.abs(slope));
+                SimpleRegression regression = new SimpleRegression();
+                for (Map.Entry<DataType<?>, Double> entry : F.entrySet()) {
+                    regression.addData(((Number) entry.getKey().getValue()).doubleValue(), entry.getValue());
+                }
+                double slope = regression.getSlope();
+                double prob = distribution.cumulativeProbability(Math.abs(slope));
 
-            return prob * regression.getRSquare();
+                return prob * regression.getRSquare();
+            }
+        } catch (Exception ignored) {
+
         }
         return -.01;
     }

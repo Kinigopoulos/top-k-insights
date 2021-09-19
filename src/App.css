@@ -71,6 +71,12 @@
     margin: 0 auto;
     color: var(--secondary-color);
     text-align: center;
+
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+
     /*line-height: calc(100vh - 4rem);*/
     height: calc(100vh - 4rem);
     -webkit-touch-callout:none;
@@ -84,9 +90,11 @@
     background-color: var(--secondary-bg-color);
     padding: 2rem;
     border-radius: 20px;
-    position: relative;
-    top: 50%;
 
+}
+
+.errorMessageButton{
+    display: block;
 }
 
 .mainBody{
@@ -161,6 +169,7 @@ button{
     border: none;
     outline: none;
     margin: 1rem auto;
+    cursor: pointer;
     color: var(--main-color);
 }
 button:hover{

@@ -62,7 +62,6 @@ public class JSONController {
         return dimensionTypes;
     }
 
-
     public static Database toDatabase(String data, String columns, String[] ordinal, String measureColumnName, String datasource) {
         JSONArray jsonArray = new JSONArray(data);
         JSONArray columnsArray = new JSONArray(columns);

@@ -99,8 +99,8 @@ app.post('/run', async (req, res, next) => {
         ordinalColumns.splice(ordinalIndex, 1);
     }
 
+    queryColumns.sort();
     queryColumns.push(measureColumn);
-
 
     const groupByQuery = {
         queryType: "groupBy",
@@ -109,18 +109,34 @@ app.post('/run', async (req, res, next) => {
         granularity: "all",
         intervals: "0/10000"
     };
+
+    const isScanQuery = true;
+    if(isScanQuery){
+        delete groupByQuery.dimensions;
+        groupByQuery.queryType = "scan";
+        groupByQuery.columns = queryColumns;
+    }
+
     const filtersJSON = constructFilterJSON(filters);
     console.log(filtersJSON);
     if(filtersJSON){
         groupByQuery.filter = filtersJSON;
     }
+    console.log(groupByQuery);
 
     try {
         const axiosResponse = await axios.post(`${ports.broker}/druid/v2`, groupByQuery, {auth: {username, password}});
 
-        const result = axiosResponse.data.map(obj => {
-            return obj['event']
-        });
+        console.log(axiosResponse.data);
+        const result = isScanQuery ?
+            axiosResponse.data.map(obj => {
+                return obj.events
+            }).flat()
+            :
+            axiosResponse.data.map(obj => {
+                return obj['event']
+            });
+        const totalRows = result.length;
 
         console.log(result);
 
@@ -145,7 +161,7 @@ WHERE TABLE_SCHEMA = 'druid' AND TABLE_NAME = '${datasource}'`
                     return;
                 }
                 console.log(JSON.parse(result));
-                res.end(result);
+                res.send({result: JSON.parse(result), rows: totalRows});
                 console.timeEnd("execution");
             });
     } catch (err) {
