@@ -1,13 +1,15 @@
 import React from "react";
 
-function Help(){
-    return(
+function Help() {
+    return (
         <div className="openDialogContainer">
+            <h1>Help</h1>
             <h2>Extracting Top-K Insights from Multi-Dimensional Data</h2>
             <h3>About</h3>
             <p>
                 This project was created for my thesis.
-                The repository can be found <a href="https://github.com/Kinigopoulos/top-k-insights" target="_blank" rel="noreferrer">here!</a>
+                The repository can be found <a href="https://github.com/Kinigopoulos/top-k-insights" target="_blank"
+                                               rel="noreferrer">here!</a>
             </p>
             <h3>Executing the algorithm</h3>
             <p>
@@ -30,7 +32,8 @@ function Help(){
                 <li>
                     <h4>Domain Columns</h4>
                     Choose the columns that you want to include for the extraction. You don't need to choose the
-                    measurement column here. <br/> Right of each included column you can select whether the column is ordinal.
+                    measurement column here. <br/> Right of each included column you can select whether the column is
+                    ordinal.
                     Ordinal columns are used to generate shape insights.
                 </li>
                 <li>
@@ -57,8 +60,17 @@ function Help(){
                     <h4>Insight Types</h4>
                     The types of insights to look up.
                 </li>
+                <li>
+                    <h4>Filters</h4>
+                    Exclude documents by defining a custom query to druid.
+                </li>
+                <ul>
+                    <li>Use <b>equals</b> to include only documents with the given property.</li>
+                    <li>Use <b>not equals</b> to exclude documents with the given property.</li>
+                </ul>
+                Use <button>+</button> to add more conditions.
             </ul>
-            <p>When you are ready press the Execute button. Your results will get executed and presented.</p>
+            <p>When you are ready press the <button>Execute</button> button. Your results will get executed and presented.</p>
         </div>
     )
 }

@@ -4,6 +4,7 @@ import './App.css';
 import Graph from "./Graph";
 import Help from "./Components/Help";
 import Settings from "./Components/Settings";
+import {__timeColumns} from "./constants";
 
 function App() {
 
@@ -12,7 +13,6 @@ function App() {
     const [openDialog, setOpenDialog] = useState(0);
     const [ports, setPorts] = useState(JSON.parse(localStorage.getItem("ports")) || {
         Broker: "http://localhost:8082",
-        Coordinator: "http://localhost:8081",
         Router: "http://localhost:8888"
     });
     const [credentials, setCredentials] = useState(JSON.parse(localStorage.getItem("credentials")) || {
@@ -26,7 +26,7 @@ function App() {
             headers.password = credentials.password;
         }
         return headers;
-    }
+    };
 
     const aggregators = ["Sum", "Count", "Mean"];
     const defaultExtractors = [
@@ -42,7 +42,7 @@ function App() {
     const filterTypes = [
         "equals",
         "not equals"
-    ]
+    ];
 
     function MainBody() {
         const [dataSources, setDataSources] = useState([]);
@@ -85,7 +85,13 @@ function App() {
             })
                 .then(res => {
                     if (Array.isArray(res.data)) {
-                        setColumns(res.data);
+                        const columns = res.data.map(column => {
+                            if (column === "__time") {
+                                return __timeColumns;
+                            }
+                            return column;
+                        }).flat();
+                        setColumns(columns);
                     } else {
                         setColumns([]);
                     }
@@ -144,7 +150,7 @@ function App() {
 
         function addFilter(e) {
             e.preventDefault();
-            setOptions({...options, filters: [...options.filters, {type: "", dimension: "", value: ""}]})
+            setOptions({...options, filters: [...options.filters, {type: "", dimension: "", value: [""]}]})
         }
 
         function setFilter(e) {
@@ -158,10 +164,36 @@ function App() {
             setOptions({...options, filters: newFilters});
         }
 
+        function setFilterValue(e) {
+            e.preventDefault();
+
+            const name = Number.parseInt(e.target.name.split('-')[0]);
+            const id = Number.parseInt(e.target.name.split('-')[1]);
+
+            const newFilters = [...options.filters];
+            newFilters[id].value[name] = e.target.value;
+            setOptions({...options, filters: newFilters});
+        }
+
+        function addFilterValue(e) {
+            e.preventDefault();
+            const id = Number.parseInt(e.target.name);
+            const value = Number.parseInt(e.target.value);
+            const newFilters = [...options.filters];
+
+            if (value === 0) {
+                newFilters[id].value.push("");
+            } else if (value > 0) {
+                newFilters[id].value.splice(value, 1);
+            }
+
+
+            setOptions({...options, filters: newFilters});
+        }
+
         function removeFilter(e) {
             e.preventDefault();
             const id = e.target.id;
-            console.log(id);
             const newFilters = [...options.filters];
             newFilters.splice(id, 1);
             setOptions({...options, filters: newFilters});
@@ -198,13 +230,7 @@ function App() {
                 .then(res => {
                     console.log(res.data);
                     setIsExecuting(false);
-                    setDimensions(() => {
-                        let columns = options.columns.sort();
-                        const index = columns.indexOf(options.measureColumn);
-                        if (index > -1) columns.splice(index, 1);
-                        columns.push(options.measureColumn);
-                        return columns;
-                    });
+                    setDimensions(res.data.dimensions);
                     setInsights(res.data.result);
                     setNumberOfRows(res.data.rows);
                 })
@@ -451,14 +477,37 @@ function App() {
                                                 })}
                                             </select>
                                         </div>
-                                        <input className="" name={`value-${key}`} onChange={setFilter}
-                                               value={filter.value}/>
-
+                                        {
+                                            filter.value.map((val, key2) => {
+                                                return (
+                                                    <div className="filterValueContainer" key={key2}>
+                                                        <input className="filterValue" name={`${key2}-${key}`}
+                                                               onChange={setFilterValue}
+                                                               value={val}/>
+                                                        {
+                                                            filter.type === "equals" && (key2 === 0 ?
+                                                                <button className="addOrFilterButton" value={key2}
+                                                                        title="Add OR condition" name={key}
+                                                                        onClick={addFilterValue}>
+                                                                    <span style={{pointerEvents: "none"}}>+</span>
+                                                                </button>
+                                                                :
+                                                                <button
+                                                                    className="addOrFilterButton removeOrFilterButton"
+                                                                    value={key2} title="Remove OR condition" name={key}
+                                                                    onClick={addFilterValue}>
+                                                                    <span style={{pointerEvents: "none"}}>-</span>
+                                                                </button>)
+                                                        }
+                                                    </div>
+                                                )
+                                            })
+                                        }
                                     </React.Fragment>
                                 )
                             })
                         }
-                        <button onClick={addFilter}>+</button>
+                        <button onClick={addFilter} title="Add a filter">+</button>
                     </form>
                     <br/>
 

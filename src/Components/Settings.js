@@ -29,6 +29,7 @@ function Settings({ports, setPorts, credentials, setCredentials}) {
 
     return (
         <div className="openDialogContainer">
+            <h1>Settings</h1>
             <h2>Set Up Your Druid Ports</h2>
             {
                 Object.entries(settings).map(([setting, value]) => {

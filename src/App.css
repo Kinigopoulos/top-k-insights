@@ -33,7 +33,7 @@
     z-index: 5;
     overflow-y: scroll;
     border: 2px solid var(--secondary-color);
-    border-radius: 1rem;
+    border-radius: 3px;
     background: var(--secondary-bg-color);
 }
 
@@ -190,6 +190,32 @@ button:hover{
     font-size: small;
     cursor: pointer;
     color: #f30522;
+}
+
+.filterValueContainer{
+    position: relative;
+}
+
+.filterValue{
+    margin-top: 0;
+}
+
+.addOrFilterButton{
+    position: absolute;
+    top: 0.3rem;
+    right: -0.5rem;
+    margin: 0;
+    width: 1.5rem;
+    height: 1.5rem;
+    padding: 0;
+    font-size: 1rem;
+}
+
+.removeOrFilterButton{
+    background-color: #c2041d;
+}
+.removeOrFilterButton:hover{
+    background-color: #f30522;
 }
 
 .resultsContainer{
