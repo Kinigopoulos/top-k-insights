@@ -550,14 +550,10 @@ function App() {
                         </div>
                         {
                             insights.map((insight, key) => {
-                                let siblingGroup = "<";
+                                const siblingGroup = [];
                                 insight.subspace.forEach((dim, key) => {
-                                    siblingGroup += dim === null ? "*" : dim;
-                                    if (key !== insight.subspace.length - 1) {
-                                        siblingGroup += ", ";
-                                    }
+                                    siblingGroup.push({title: dimensions[key], value: dim === null ? "*" : dim});
                                 });
-                                siblingGroup += ">";
                                 let extractorString = extractorToString(insight.extractor);
 
                                 return (
@@ -569,7 +565,9 @@ function App() {
                                             </span>
 
                                             <span className="insightCell">
-                                                SG({siblingGroup}, {dimensions[insight.dimension]})
+                                                SG({'<'}{siblingGroup.map((sg, key) => {
+                                                return (<span title={sg.title} key={key}>{sg.value + (key === siblingGroup.length -1 ? "" : ",")}</span>)
+                                            })}{'>'}, {dimensions[insight.dimension]})
                                             </span>
 
                                             <span className="insightCell">
@@ -586,7 +584,8 @@ function App() {
                                             <Graph insight={insight}
                                                    siblingGroup={siblingGroup}
                                                    extractor={extractorString}
-                                                   measureLabel={options.measureColumn}/>
+                                                   measureLabel={options.measureColumn}
+                                                   dimensions={dimensions}/>
                                         }
                                     </React.Fragment>
                                 )

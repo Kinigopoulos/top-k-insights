@@ -1,7 +1,7 @@
 import React from "react";
 import {Bar, Line} from "react-chartjs-2";
 
-function Graph({insight, siblingGroup, extractor, measureLabel}) {
+function Graph({insight, siblingGroup, extractor, measureLabel, dimensions}) {
 
     function generateData(data){
         let result = {labels: [], data: []}
@@ -60,7 +60,9 @@ function Graph({insight, siblingGroup, extractor, measureLabel}) {
     return (
         <div className="graphContainer">
             <h4>Type: {insight.insightType}</h4>
-            <h4>Sibling Group: {siblingGroup}</h4>
+            <h4>Sibling Group: SG({'<'}{siblingGroup.map((sg, key) => {
+                return (<span title={sg.title} key={key}>{sg.value + (key === siblingGroup.length -1 ? "" : ",")}</span>)
+            })}{'>'}, {dimensions[insight.dimension]})</h4>
             <h4>Extractor: {extractor}</h4>
             <h4>Score: {insight.value}</h4>
             <div className="chartContainer">
