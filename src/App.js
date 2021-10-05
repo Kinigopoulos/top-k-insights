@@ -66,6 +66,16 @@ function App() {
         const [selectedInsight, setSelectedInsight] = useState(-1);
         const [loadedInsights, setLoadedInsights] = useState(false);
 
+        function loadInsights(data) {
+            const {columns, options, rows, dimensions, insights} = JSON.parse(data.toString());
+            setLoadedInsights(true);
+            setColumns(columns);
+            setOptions(options);
+            setNumberOfRows(rows);
+            setDimensions(dimensions);
+            setInsights(insights);
+        }
+
         useEffect(() => {
             axios.get("/data-sources", {params: {broker: ports.Broker}, headers: getHeadersWithCredentials()})
                 .then(res => {
@@ -302,17 +312,11 @@ function App() {
 
         const showFile = async (e) => {
             e.preventDefault()
-            const reader = new FileReader()
+            const reader = new FileReader();
             reader.onload = async (e) => {
-                const {columns, options, rows, dimensions, insights} = JSON.parse((e.target.result).toString());
-                setLoadedInsights(true);
-                setColumns(columns);
-                setOptions(options);
-                setNumberOfRows(rows);
-                setDimensions(dimensions);
-                setInsights(insights);
+                loadInsights(e.target.result);
             };
-            reader.readAsText(e.target.files[0])
+            reader.readAsText(e.target.files[0]);
         };
 
         return (
@@ -543,7 +547,8 @@ function App() {
                     {insights.length > 0 &&
                     <div>
                         <div className="insightRow" style={{marginBottom: "0.2rem"}}>
-                            <span className="insightCell">Insight Type</span>
+                            <span className="insightCell" style={{flexShrink: 1.37}}>No.</span>
+                            <span className="insightCell" style={{flexShrink: 1.29}}>Insight Type</span>
                             <span className="insightCell">Sibling Group</span>
                             <span className="insightCell">Extractor</span>
                             <span className="insightCell">Score</span>
@@ -560,7 +565,12 @@ function App() {
                                     <React.Fragment key={key}>
                                         <div className="insightRow insightRowObj"
                                              onClick={() => changeSelectedInsight(key)}>
-                                            <span className="insightCell">
+
+                                            <span className="insightCell" style={{flexShrink: 1.37}}>
+                                                {key + 1}.
+                                            </span>
+
+                                            <span className="insightCell" style={{flexShrink: 1.29}}>
                                                 {insight.insightType}
                                             </span>
 
