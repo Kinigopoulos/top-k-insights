@@ -1,5 +1,6 @@
 {
   "name": "topk-insights",
+  "homepage": "http://kinigopoulos.github.io/top-k-insights",
   "version": "0.1.0",
   "private": true,
   "dependencies": {
@@ -19,7 +20,9 @@
     "installAll": "npm install && npm run installBack",
     "server": "npm start --prefix api",
     "dev": "concurrently \"npm start\" \"npm run start --prefix api\"",
-    "topk": "concurrently \"npm start\" \"npm run server --prefix api\""
+    "topk": "concurrently \"npm start\" \"npm run server --prefix api\"",
+    "predeploy": "npm run build",
+    "deploy": "gh-pages -d build"
   },
   "eslintConfig": {
     "extends": [
