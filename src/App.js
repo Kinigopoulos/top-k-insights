@@ -37,7 +37,10 @@ function App() {
     ];
     const defaultInsightTypes = [
         "Point",
-        "Shape"
+        "Shape",
+        "Attribution",
+        "TwoPoints",
+        "LastPoint"
     ];
     const filterTypes = [
         "equals",

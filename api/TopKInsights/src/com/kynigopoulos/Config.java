@@ -5,9 +5,7 @@ import com.kynigopoulos.Aggregators.CountAggregator;
 import com.kynigopoulos.Aggregators.MeanAggregator;
 import com.kynigopoulos.Aggregators.SumAggregator;
 import com.kynigopoulos.Extractors.*;
-import com.kynigopoulos.InsightTypes.InsightType;
-import com.kynigopoulos.InsightTypes.PointInsight;
-import com.kynigopoulos.InsightTypes.ShapeInsight;
+import com.kynigopoulos.InsightTypes.*;
 
 import java.util.Arrays;
 import java.util.HashSet;
@@ -23,6 +21,9 @@ public class Config {
 
     public static InsightType[] availableInsightTypes = new InsightType[]{
             new PointInsight(),
+            new LastPointInsight(),
+            new Attribution(),
+            new TwoPointsInsight(),
             new ShapeInsight()
     };
 
