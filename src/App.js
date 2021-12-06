@@ -200,7 +200,6 @@ function App() {
                 newFilters[id].value.splice(value, 1);
             }
 
-
             setOptions({...options, filters: newFilters});
         }
 
