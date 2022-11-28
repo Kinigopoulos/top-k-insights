@@ -1,0 +1,50 @@
+[
+  {
+    "COLUMN_NAME": "dimos",
+    "DATA_TYPE": "VARCHAR"
+  },
+  {
+    "COLUMN_NAME": "id",
+    "DATA_TYPE": "VARCHAR"
+  },
+  {
+    "COLUMN_NAME": "latitude",
+    "DATA_TYPE": "DOUBLE"
+  },
+  {
+    "COLUMN_NAME": "longitude",
+    "DATA_TYPE": "DOUBLE"
+  },
+  {
+    "COLUMN_NAME": "max",
+    "DATA_TYPE": "BIGINT"
+  },
+  {
+    "COLUMN_NAME": "min",
+    "DATA_TYPE": "BIGINT"
+  },
+  {
+    "COLUMN_NAME": "node_id",
+    "DATA_TYPE": "VARCHAR"
+  },
+  {
+    "COLUMN_NAME": "node_type",
+    "DATA_TYPE": "VARCHAR"
+  },
+  {
+    "COLUMN_NAME": "nomos",
+    "DATA_TYPE": "VARCHAR"
+  },
+  {
+    "COLUMN_NAME": "perifereia",
+    "DATA_TYPE": "VARCHAR"
+  },
+  {
+    "COLUMN_NAME": "type",
+    "DATA_TYPE": "VARCHAR"
+  },
+  {
+    "COLUMN_NAME": "value",
+    "DATA_TYPE": "DOUBLE"
+  }
+]

@@ -3,6 +3,9 @@
   "version": "0.1.0",
   "private": true,
   "dependencies": {
+    "@stdlib/stats-base-dists-logistic": "0.0.7",
+    "@stdlib/stats-base-dists-normal": "0.0.7",
+    "@stdlib/stats-base-mean": "0.0.9",
     "chart.js": "^3.5.1",
     "concurrently": "^6.2.0",
     "gh-pages": "^3.2.3",
@@ -10,6 +13,7 @@
     "react-chartjs-2": "^3.0.3",
     "react-dom": "^17.0.2",
     "react-scripts": "4.0.3",
+    "regression": "^2.0.1",
     "web-vitals": "^1.1.2"
   },
   "scripts": {
@@ -19,7 +23,9 @@
     "installAll": "npm install && npm run installBack",
     "server": "npm start --prefix api",
     "dev": "concurrently \"npm start\" \"npm run start --prefix api\"",
-    "topk": "concurrently \"npm start\" \"npm run server --prefix api\""
+    "topk": "concurrently \"npm start\" \"npm run server --prefix api\"",
+    "deploy": "gh-pages -d build",
+    "testJSAlgo": "node src/Data/testPseudoServer.js"
   },
   "eslintConfig": {
     "extends": [

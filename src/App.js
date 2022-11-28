@@ -5,11 +5,12 @@ import Graph from "./Graph";
 import Help from "./Components/Help";
 import Settings from "./Components/Settings";
 import {__timeColumns} from "./constants";
+import {getDimensions, runProgram} from "./Data/pseudoServer";
 
 function App() {
 
     const [druidRunning, setDruidRunning] = useState(true);
-    const [bypassDruid, setBypassDruid] = useState(false);
+    const [bypassDruid, setBypassDruid] = useState(true);
     const [openDialog, setOpenDialog] = useState(0);
     const [ports, setPorts] = useState(JSON.parse(localStorage.getItem("ports")) || {
         Broker: "http://localhost:8082",
@@ -59,7 +60,7 @@ function App() {
             t: 1,
             aggregator: aggregators[0],
             extractors: [...defaultExtractors],
-            insightTypes: [...defaultInsightTypes],
+            insightTypes: [...defaultInsightTypes.slice(0, 2)],
             filters: []
         });
         const [isExecuting, setIsExecuting] = useState(false);
@@ -80,22 +81,31 @@ function App() {
         }
 
         useEffect(() => {
-            axios.get("/data-sources", {params: {broker: ports.Broker}, headers: getHeadersWithCredentials()})
-                .then(res => {
-                    setDataSources(res.data);
-                }).catch(err => {
-                setDruidRunning(false);
-                console.log(err);
-            });
+            // axios.get("/data-sources", {params: {broker: ports.Broker}, headers: getHeadersWithCredentials()})
+            //     .then(res => {
+            //         setDataSources(res.data);
+            //     }).catch(err => {
+            //     setDruidRunning(false);
+            //     console.log(err);
+            // });
+
+            setDataSources([
+                "Sensors - Air Pressure",
+                "Sensors - Air Temperature",
+                // "Sensors - Soil Temperature"
+            ]);
+            setOptions(previousOptions => {return {...options, ...previousOptions, datasource: "Sensors - Air Temperature"}});
         }, []);
 
         useEffect(() => {
             if (loadedInsights) return;
             const name = options.datasource;
-            axios.get("/dimensions", {
-                params: {broker: ports.Broker, datasource: name},
-                headers: getHeadersWithCredentials()
-            })
+
+            // axios.get("/dimensions", {
+            //     params: {broker: ports.Broker, datasource: name},
+            //     headers: getHeadersWithCredentials()
+            // })
+            getDimensions()
                 .then(res => {
                     if (Array.isArray(res.data)) {
                         const columns = res.data.map(column => {
@@ -109,7 +119,7 @@ function App() {
                         setColumns([]);
                     }
                     setOptions(options => {
-                        return {...options, columns: [], ordinal: [], measureColumn: ''}
+                        return {...options, columns: [], ordinal: [], measureColumn: 'value'}
                     });
                 })
                 .catch(err => {
@@ -236,11 +246,13 @@ function App() {
                 return;
             }
             setIsExecuting(true);
-            axios.post("/run", {
-                options: options,
-                ports: {broker: ports.Broker, router: ports.Router}
-            }, {headers: getHeadersWithCredentials()})
+            // axios.post("/run", {
+            //     options: options,
+            //     ports: {broker: ports.Broker, router: ports.Router}
+            // }, {headers: getHeadersWithCredentials()})
+            runProgram({options})
                 .then(res => {
+                    console.log(res);
                     console.log(res.data);
                     setIsExecuting(false);
                     setDimensions(res.data.dimensions);
@@ -248,8 +260,9 @@ function App() {
                     setNumberOfRows(res.data.rows);
                 })
                 .catch(err => {
-                    console.log(err.response.data.message);
-                    window.alert(err.response.data.message);
+                    console.log(err);
+                    console.log(err && err.response && err.response.data.message);
+                    window.alert(err && err.response && err.response.data.message);
                     setIsExecuting(false);
                     setInsights([]);
                 });
@@ -451,71 +464,71 @@ function App() {
                     </form>
                     <br/>
 
-                    <span>Filters</span>
-                    <form>
-                        {
-                            options.filters.map((filter, key) => {
-                                return (
-                                    <React.Fragment key={key}>
-                                        <span>Filter No. {key + 1} <span className="filterRemove" onClick={removeFilter}
-                                                                         id={key}>Remove</span></span>
-                                        <div className="filterContainer">
-                                            <select onChange={setFilter} name={`dimension-${key}`}
-                                                    value={filter.dimension}>
-                                                <option value={''}>--- Select Dimension ---</option>
-                                                {columns.map((column, key) => {
-                                                    return (
-                                                        <option value={column} key={key}>
-                                                            {column}
-                                                        </option>
-                                                    )
-                                                })}
-                                            </select>
+                    {/*<span>Filters</span>*/}
+                    {/*<form>*/}
+                    {/*    {*/}
+                    {/*        options.filters.map((filter, key) => {*/}
+                    {/*            return (*/}
+                    {/*                <React.Fragment key={key}>*/}
+                    {/*                    <span>Filter No. {key + 1} <span className="filterRemove" onClick={removeFilter}*/}
+                    {/*                                                     id={key}>Remove</span></span>*/}
+                    {/*                    <div className="filterContainer">*/}
+                    {/*                        <select onChange={setFilter} name={`dimension-${key}`}*/}
+                    {/*                                value={filter.dimension}>*/}
+                    {/*                            <option value={''}>--- Select Dimension ---</option>*/}
+                    {/*                            {columns.map((column, key) => {*/}
+                    {/*                                return (*/}
+                    {/*                                    <option value={column} key={key}>*/}
+                    {/*                                        {column}*/}
+                    {/*                                    </option>*/}
+                    {/*                                )*/}
+                    {/*                            })}*/}
+                    {/*                        </select>*/}
 
-                                            <select onChange={setFilter} className="filterType" name={`type-${key}`}
-                                                    value={filter.type}>
-                                                <option value={''}>--- Select Type ---</option>
-                                                {filterTypes.map((type, key) => {
-                                                    return (
-                                                        <option value={type} key={key}>
-                                                            {type}
-                                                        </option>
-                                                    )
-                                                })}
-                                            </select>
-                                        </div>
-                                        {
-                                            filter.value.map((val, key2) => {
-                                                return (
-                                                    <div className="filterValueContainer" key={key2}>
-                                                        <input className="filterValue" name={`${key2}-${key}`}
-                                                               onChange={setFilterValue}
-                                                               value={val}/>
-                                                        {
-                                                            filter.type === "equals" && (key2 === 0 ?
-                                                                <button className="addOrFilterButton" value={key2}
-                                                                        title="Add OR condition" name={key}
-                                                                        onClick={addFilterValue}>
-                                                                    <span style={{pointerEvents: "none"}}>+</span>
-                                                                </button>
-                                                                :
-                                                                <button
-                                                                    className="addOrFilterButton removeOrFilterButton"
-                                                                    value={key2} title="Remove OR condition" name={key}
-                                                                    onClick={addFilterValue}>
-                                                                    <span style={{pointerEvents: "none"}}>-</span>
-                                                                </button>)
-                                                        }
-                                                    </div>
-                                                )
-                                            })
-                                        }
-                                    </React.Fragment>
-                                )
-                            })
-                        }
-                        <button onClick={addFilter} title="Add a filter">+</button>
-                    </form>
+                    {/*                        <select onChange={setFilter} className="filterType" name={`type-${key}`}*/}
+                    {/*                                value={filter.type}>*/}
+                    {/*                            <option value={''}>--- Select Type ---</option>*/}
+                    {/*                            {filterTypes.map((type, key) => {*/}
+                    {/*                                return (*/}
+                    {/*                                    <option value={type} key={key}>*/}
+                    {/*                                        {type}*/}
+                    {/*                                    </option>*/}
+                    {/*                                )*/}
+                    {/*                            })}*/}
+                    {/*                        </select>*/}
+                    {/*                    </div>*/}
+                    {/*                    {*/}
+                    {/*                        filter.value.map((val, key2) => {*/}
+                    {/*                            return (*/}
+                    {/*                                <div className="filterValueContainer" key={key2}>*/}
+                    {/*                                    <input className="filterValue" name={`${key2}-${key}`}*/}
+                    {/*                                           onChange={setFilterValue}*/}
+                    {/*                                           value={val}/>*/}
+                    {/*                                    {*/}
+                    {/*                                        filter.type === "equals" && (key2 === 0 ?*/}
+                    {/*                                            <button className="addOrFilterButton" value={key2}*/}
+                    {/*                                                    title="Add OR condition" name={key}*/}
+                    {/*                                                    onClick={addFilterValue}>*/}
+                    {/*                                                <span style={{pointerEvents: "none"}}>+</span>*/}
+                    {/*                                            </button>*/}
+                    {/*                                            :*/}
+                    {/*                                            <button*/}
+                    {/*                                                className="addOrFilterButton removeOrFilterButton"*/}
+                    {/*                                                value={key2} title="Remove OR condition" name={key}*/}
+                    {/*                                                onClick={addFilterValue}>*/}
+                    {/*                                                <span style={{pointerEvents: "none"}}>-</span>*/}
+                    {/*                                            </button>)*/}
+                    {/*                                    }*/}
+                    {/*                                </div>*/}
+                    {/*                            )*/}
+                    {/*                        })*/}
+                    {/*                    }*/}
+                    {/*                </React.Fragment>*/}
+                    {/*            )*/}
+                    {/*        })*/}
+                    {/*    }*/}
+                    {/*    <button onClick={addFilter} title="Add a filter">+</button>*/}
+                    {/*</form>*/}
                     <br/>
 
                     <button onClick={ExecuteQuery}>Execute</button>
