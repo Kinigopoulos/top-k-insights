@@ -2,6 +2,7 @@
   "name": "topk-insights",
   "version": "0.1.0",
   "private": true,
+  "homepage": "https://kinigopoulos.github.io/top-k-insights/",
   "dependencies": {
     "chart.js": "^3.5.1",
     "concurrently": "^6.2.0",
